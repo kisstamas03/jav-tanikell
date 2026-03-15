@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teszt kitöltése - E-Learning Platform</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Alap stílusok (ugyanaz, mint eddig) */
+    :root { --primary: #2563eb; --primary-light: #3b82f6; --body-bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; }
+    body { background: var(--body-bg); font-family: 'DM Sans', sans-serif; color: var(--text); }
+    .page-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 40px 0; text-align: center; }
+    .page-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 5px; }
+    .page-header p { margin: 0; opacity: 0.85; font-size: 15px; }
+
+    .quiz-container { max-width: 800px; margin: -30px auto 50px; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 40px; position: relative; z-index: 10; border: 1px solid var(--border); }
+    .question-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 25px; margin-bottom: 25px; }
+    .question-text { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #0f172a; }
+
+    /* Rádiógombok stílusozása */
+    .option-label { display: block; padding: 12px 15px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; background: white; }
+    .option-label:hover { border-color: var(--primary-light); background: #eff6ff; }
+    .option-label input[type="radio"] { margin-right: 10px; transform: scale(1.2); }
+    /* Ha a rádiógomb ki van választva, stílusozzuk a szülőt (labelt) */
+    .option-label:has(input[type="radio"]:checked) { border-color: var(--primary); background: #eff6ff; font-weight: 600; }
+
+    .quiz-footer { border-top: 1px solid var(--border); padding-top: 25px; display: flex; justify-content: space-between; align-items: center; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="container">
+    <h1><i class="fas fa-pen-fancy me-2"></i><span th:text="${quiz.title}">Teszt címe</span></h1>
+    <p th:text="${course.title}">Kurzus címe</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="quiz-container">
+    <form th:action="@{/courses/{courseId}/quizzes/{quizId}/submit(courseId=${course.id}, quizId=${quiz.id})}" method="post">
+
+      <div th:each="q, iterStat : ${quiz.questions}" class="question-card">
+        <div class="question-text" th:text="${iterStat.count} + '. ' + ${q.text}">1. Kérdés szövege</div>
+
+        <label class="option-label">
+          <input type="radio" th:name="'question_' + ${q.id}" value="A" required>
+          <span class="fw-bold me-2">A)</span> <span th:text="${q.optionA}">Opció A</span>
+        </label>
+
+        <label class="option-label">
+          <input type="radio" th:name="'question_' + ${q.id}" value="B" required>
+          <span class="fw-bold me-2">B)</span> <span th:text="${q.optionB}">Opció B</span>
+        </label>
+
+        <label class="option-label">
+          <input type="radio" th:name="'question_' + ${q.id}" value="C" required>
+          <span class="fw-bold me-2">C)</span> <span th:text="${q.optionC}">Opció C</span>
+        </label>
+
+        <label class="option-label">
+          <input type="radio" th:name="'question_' + ${q.id}" value="D" required>
+          <span class="fw-bold me-2">D)</span> <span th:text="${q.optionD}">Opció D</span>
+        </label>
+      </div>
+
+      <div class="quiz-footer">
+        <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Vissza a kurzushoz</a>
+        <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-paper-plane me-2"></i>Válaszok beküldése</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+</body>
+</html>

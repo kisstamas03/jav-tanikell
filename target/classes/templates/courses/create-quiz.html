@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Új kérdéssor - E-Learning Platform</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* A meglévő stílusaid megtartva */
+    :root { --primary: #2563eb; --primary-light: #3b82f6; --sidebar-bg: #0f172a; --body-bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; --muted: #64748b; }
+    * { box-sizing: border-box; }
+    body { background: var(--body-bg); font-family: 'DM Sans', sans-serif; color: var(--text); margin: 0; display: flex; min-height: 100vh; }
+    .sidebar { width: 250px; background: var(--sidebar-bg); min-height: 100vh; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 100; }
+    .sidebar-brand { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .brand-icon { width: 36px; height: 36px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0; }
+    .brand-name { font-size: 15px; font-weight: 700; color: white; line-height: 1.2; }
+    .brand-sub { font-size: 11px; color: rgba(255,255,255,0.3); }
+    .sidebar-nav { padding: 16px 12px; flex: 1; }
+    .nav-section-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 8px 8px; margin-top: 8px; }
+    .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: all 0.15s; margin-bottom: 2px; }
+    .sidebar-link i { width: 16px; text-align: center; font-size: 13px; }
+    .sidebar-link:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; }
+    .u-avatar { width: 32px; height: 32px; background: var(--primary); border-radius: 7px; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; flex-shrink: 0; }
+    .u-name { font-size: 13px; font-weight: 600; color: white; }
+    .u-role { font-size: 11px; color: rgba(255,255,255,0.35); }
+    .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .btn-logout { width: 100%; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); border: none; padding: 9px; border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; }
+    .btn-logout:hover { background: rgba(255,255,255,0.1); color: white; }
+
+    .main-content { margin-left: 250px; flex: 1; display: flex; flex-direction: column; }
+    .page-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 48px 40px; }
+    .page-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+    .page-header p { margin: 0; opacity: 0.85; font-size: 14px; }
+    .content { padding: 32px 40px; flex: 1; }
+
+    .form-card { background: white; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.07); padding: 28px; margin-bottom: 20px; }
+    .form-section-title { font-size: 13px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #e0e7ff; }
+
+    /* Új stílusok a kvíz kérdésekhez */
+    .question-block { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; position: relative; }
+    .question-number { position: absolute; top: -12px; left: 20px; background: var(--primary); color: white; padding: 2px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+    .remove-btn { position: absolute; top: 10px; right: 10px; color: #ef4444; background: none; border: none; cursor: pointer; }
+    .remove-btn:hover { color: #b91c1c; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="/" class="sidebar-brand">
+    <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+    <div><div class="brand-name">E-Learning</div><div class="brand-sub">Platform</div></div>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Navigáció</div>
+    <a href="/" class="sidebar-link"><i class="fas fa-home"></i> Főoldal</a>
+    <a href="/courses" class="sidebar-link"><i class="fas fa-book-open"></i> Kurzusok</a>
+    <a href="/about" class="sidebar-link"><i class="fas fa-info-circle"></i> Rólunk</a>
+    <div class="nav-section-label">Fiók</div>
+    <a href="/dashboard" class="sidebar-link"><i class="fas fa-th-large"></i> Vezérlőpult</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="u-avatar"><i class="fas fa-user"></i></div>
+      <div><div class="u-name" sec:authentication="name">Felhasználó</div><div class="u-role">Oktató</div></div>
+    </div>
+    <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés</button></form>
+  </div>
+</aside>
+
+<div class="main-content">
+  <div class="page-header">
+    <h1><i class="fas fa-question-circle me-2"></i>Új Kérdéssor Létrehozása</h1>
+    <p th:text="${course.title}">Kurzus neve</p>
+  </div>
+
+  <div class="content">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="form-card">
+          <form th:action="@{/courses/{id}/quizzes/create(id=${course.id})}" method="post" th:object="${quiz}">
+
+            <div class="form-section-title"><i class="fas fa-info-circle me-2"></i>Kvíz Adatai</div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Kérdéssor címe *</label>
+              <input type="text" class="form-control" th:field="*{title}" placeholder="Pl.: Záróvizsga, 1. Modul teszt" required>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center form-section-title mt-5">
+              <div><i class="fas fa-list-ol me-2"></i>Kérdések</div>
+            </div>
+
+            <div id="questions-container"></div>
+
+            <div class="text-center mt-3 mb-5">
+              <button type="button" class="btn btn-outline-primary" onclick="addQuestion()">
+                <i class="fas fa-plus me-2"></i>Új kérdés hozzáadása
+              </button>
+            </div>
+
+            <hr>
+            <div class="d-flex gap-2 justify-content-end mt-4">
+              <a th:href="@{/courses/{id}/manage(id=${course.id})}" class="btn btn-outline-secondary"><i class="fas fa-times me-2"></i>Mégse</a>
+              <button type="submit" class="btn btn-primary" id="saveBtn" style="display:none;">
+                <i class="fas fa-save me-2"></i>Kérdéssor mentése
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+  // JS ami kezeli a dinamikus kérdéseket
+  function addQuestion() {
+    const container = document.getElementById('questions-container');
+    // Kiszámoljuk hány kérdés van eddig, hogy jó indexet adjunk a Springnek (0, 1, 2...)
+    const index = container.children.length;
+
+    // HTML sablon egy új kérdéshez
+    const html = `
+            <div class="question-block" id="question-${index}">
+                <div class="question-number">Kérdés #${index + 1}</div>
+                <button type="button" class="remove-btn" onclick="removeQuestion(${index})"><i class="fas fa-trash"></i> Törlés</button>
+
+                <div class="mb-3 mt-2">
+                    <label class="form-label fw-semibold">Kérdés szövege *</label>
+                    <textarea class="form-control" name="questions[${index}].text" rows="2" required></textarea>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text fw-bold">A</span>
+                            <input type="text" class="form-control" name="questions[${index}].optionA" required placeholder="Válaszlehetőség">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text fw-bold">B</span>
+                            <input type="text" class="form-control" name="questions[${index}].optionB" required placeholder="Válaszlehetőség">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text fw-bold">C</span>
+                            <input type="text" class="form-control" name="questions[${index}].optionC" required placeholder="Válaszlehetőség">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text fw-bold">D</span>
+                            <input type="text" class="form-control" name="questions[${index}].optionD" required placeholder="Válaszlehetőség">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 w-50">
+                    <label class="form-label fw-semibold text-success"><i class="fas fa-check-circle me-1"></i>Helyes válasz *</label>
+                    <select class="form-select border-success" name="questions[${index}].correctOption" required>
+                        <option value="">Válassz helyes opciót...</option>
+                        <option value="A">A opció</option>
+                        <option value="B">B opció</option>
+                        <option value="C">C opció</option>
+                        <option value="D">D opció</option>
+                    </select>
+                </div>
+            </div>
+        `;
+
+    container.insertAdjacentHTML('beforeend', html);
+
+    // Megjelenítjük a mentés gombot, ha már van legalább egy kérdés
+    document.getElementById('saveBtn').style.display = 'block';
+  }
+
+  // Függvény a kérdés törlésére és az indexek újrarendezésére
+  function removeQuestion(indexToRemove) {
+    document.getElementById(`question-${indexToRemove}`).remove();
+    reindexQuestions();
+
+    // Eltüntetjük a mentés gombot, ha minden kérdést kitörölt
+    const container = document.getElementById('questions-container');
+    if (container.children.length === 0) {
+      document.getElementById('saveBtn').style.display = 'none';
+    }
+  }
+
+  // Nagyon fontos: ha törlünk egy kérdést középről, újra kell számozni a name attribútumokat,
+  // különben a Spring Boot nem fogja tudni helyesen beolvasni a listát!
+  function reindexQuestions() {
+    const blocks = document.querySelectorAll('.question-block');
+    blocks.forEach((block, newIndex) => {
+      block.id = `question-${newIndex}`;
+      block.querySelector('.question-number').innerText = `Kérdés #${newIndex + 1}`;
+      block.querySelector('.remove-btn').setAttribute('onclick', `removeQuestion(${newIndex})`);
+
+      // Frissítjük a name attribútumokat az új indexszel
+      block.querySelector('textarea[name$=".text"]').name = `questions[${newIndex}].text`;
+      block.querySelector('input[name$=".optionA"]').name = `questions[${newIndex}].optionA`;
+      block.querySelector('input[name$=".optionB"]').name = `questions[${newIndex}].optionB`;
+      block.querySelector('input[name$=".optionC"]').name = `questions[${newIndex}].optionC`;
+      block.querySelector('input[name$=".optionD"]').name = `questions[${newIndex}].optionD`;
+      block.querySelector('select[name$=".correctOption"]').name = `questions[${newIndex}].correctOption`;
+    });
+  }
+
+  // Alapértelmezetten beteszünk egy üres kérdést induláskor
+  window.onload = function() {
+    addQuestion();
+  };
+</script>
+</body>
+</html>

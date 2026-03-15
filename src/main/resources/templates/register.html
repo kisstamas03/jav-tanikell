@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regisztráció - E-Learning Platform</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --primary-light: #3b82f6; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); min-height: 100vh; display: flex; align-items: center; padding: 24px 0; font-family: 'DM Sans', sans-serif; }
+        .reg-wrap { max-width: 520px; width: 100%; margin: 0 auto; padding: 24px; }
+        .reg-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,0.3); }
+        .reg-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 28px 32px 22px; text-align: center; color: white; }
+        .reg-header i { font-size: 2.5rem; margin-bottom: 10px; display: block; }
+        .reg-header h3 { font-weight: 700; margin-bottom: 3px; }
+        .reg-header p { opacity: 0.8; font-size: 13px; margin: 0; }
+        .reg-body { padding: 28px 32px 32px; }
+        .form-label { font-weight: 600; font-size: 13px; margin-bottom: 5px; }
+        .form-control, .form-select { border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 10px 14px; font-size: 14px; font-family: 'DM Sans', sans-serif; }
+        .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+        .btn-primary { background: var(--primary); border: none; border-radius: 8px; padding: 11px; font-weight: 600; font-family: 'DM Sans', sans-serif; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-outline-primary { border-color: var(--primary); color: var(--primary); border-radius: 8px; font-weight: 600; font-family: 'DM Sans', sans-serif; }
+        .back-link { text-align: center; margin-top: 20px; }
+        .back-link a { color: rgba(255,255,255,0.6); font-size: 13px; text-decoration: none; }
+        .back-link a:hover { color: white; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="reg-wrap">
+        <div class="reg-card">
+            <div class="reg-header">
+                <i class="fas fa-user-plus"></i>
+                <h3>Regisztráció</h3>
+                <p>Hozd létre új fiókodat</p>
+            </div>
+            <div class="reg-body">
+                <div th:if="${error}"   class="alert alert-danger  py-2 small"><i class="fas fa-exclamation-triangle me-2"></i><span th:text="${error}"></span></div>
+                <div th:if="${success}" class="alert alert-success py-2 small"><i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span></div>
+
+                <form th:action="@{/register}" method="post" th:object="${user}">
+                    <div class="row mb-3">
+                        <div class="col-6"><label class="form-label">Keresztnév</label><input type="text" class="form-control" th:field="*{firstName}" placeholder="Keresztnév" required></div>
+                        <div class="col-6"><label class="form-label">Vezetéknév</label><input type="text" class="form-control" th:field="*{lastName}" placeholder="Vezetéknév" required></div>
+                    </div>
+                    <div class="mb-3"><label class="form-label">Felhasználónév</label><input type="text" class="form-control" th:field="*{username}" placeholder="felhasznalonev" required></div>
+                    <div class="mb-3"><label class="form-label">Email cím</label><input type="email" class="form-control" th:field="*{email}" placeholder="email@example.com" required></div>
+                    <div class="mb-3"><label class="form-label">Jelszó (min. 6 karakter)</label><input type="password" class="form-control" th:field="*{password}" placeholder="••••••••" required minlength="6"></div>
+                    <div class="mb-3">
+                        <label class="form-label">Szerepkör</label>
+                        <select class="form-select" th:field="*{role}" required>
+                            <option value="">Válassz szerepkört</option>
+                            <option value="STUDENT">Hallgató</option>
+                            <option value="INSTRUCTOR">Oktató</option>
+                        </select>
+                    </div>
+                    <div class="form-check mb-4"><input type="checkbox" class="form-check-input" id="terms" required><label class="form-check-label small" for="terms">Elfogadom a felhasználási feltételeket</label></div>
+                    <button type="submit" class="btn btn-primary w-100 mb-3"><i class="fas fa-user-plus me-2"></i>Regisztráció</button>
+                </form>
+                <div class="text-center">
+                    <p class="text-muted small mb-2">Már van fiókod?</p>
+                    <a href="/login" class="btn btn-outline-primary btn-sm w-100"><i class="fas fa-sign-in-alt me-2"></i>Bejelentkezés</a>
+                </div>
+            </div>
+        </div>
+        <div class="back-link"><a href="/"><i class="fas fa-arrow-left me-2"></i>Vissza a főoldalra</a></div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
