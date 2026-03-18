@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil – ME-Learning</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link th:href="@{/css/main.css}" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<aside class="sidebar">
+  <a href="/" class="sidebar-brand">
+    <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+    <div><div class="brand-name">ME-Learning</div><div class="brand-sub">Platform</div></div>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Navigáció</div>
+    <a href="/" class="sl "><i class="fas fa-home"></i>Főoldal</a>
+    <a href="/courses" class="sl "><i class="fas fa-book-open"></i>Kurzusok</a>
+    <a href="/about" class="sl "><i class="fas fa-info-circle"></i>Rólunk</a>
+    <div sec:authorize="isAuthenticated()">
+      <div class="nav-label">Fiók</div>
+      <a href="/dashboard" class="sl "><i class="fas fa-th-large"></i>Vezérlőpult</a>
+      <a href="/my-courses" class="sl "><i class="fas fa-layer-group"></i>Kurzusaim</a>
+      <a href="/profile" class="sl active"><i class="fas fa-user"></i>Profil</a>
+      <div sec:authorize="hasAnyRole('INSTRUCTOR','ADMIN')">
+        <a href="/courses/create" class="sl "><i class="fas fa-plus-circle"></i>Új kurzus</a>
+      </div>
+    </div>
+  </nav>
+  <div sec:authorize="isAuthenticated()" class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="u-avatar"><i class="fas fa-user"></i></div>
+      <div><div class="u-name" sec:authentication="name">Felhasználó</div><div class="u-role">Bejelentkezve</div></div>
+    </div>
+    <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés</button></form>
+  </div>
+  <div sec:authorize="isAnonymous()" class="sidebar-auth">
+    <a href="/login" class="btn-ao"><i class="fas fa-sign-in-alt me-2"></i>Bejelentkezés</a>
+    <a href="/register" class="btn-as"><i class="fas fa-user-plus me-2"></i>Regisztráció</a>
+  </div>
+</aside>
+<div class="main-content">
+  <div class="page-header"><div class="d-flex justify-content-between align-items-center"><div><h1><i class='fas fa-user me-2'></i>Profil</h1><p>Kezeld fiókodat</p></div></div></div>
+  <div class="content">
+
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="card-box card-box-body text-center" style="padding:28px;">
+          <div style="width:80px;height:80px;background:linear-gradient(135deg,var(--primary),#6B9EF8);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;margin:0 auto 14px;"><i class="fas fa-user"></i></div>
+          <div style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;margin-bottom:2px;" sec:authentication="name">Felhasználó</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:12px;" th:text="${user?.email}">email</div>
+          <span class="badge" style="background:#EEF4FF;color:#3B6FE8;font-size:11px;padding:5px 12px;" th:text="${user?.role?.name()}">STUDENT</span>
+          <hr style="margin:18px 0;border-color:var(--border);">
+          <div style="text-align:left;font-size:13px;">
+            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--border);">
+              <span style="color:var(--muted);">Teljes név</span>
+              <span style="font-weight:600;" th:text="|${user?.firstName} ${user?.lastName}|">Név</span>
+            </div>
+            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--border);">
+              <span style="color:var(--muted);">Csatlakozás</span>
+              <span style="font-weight:600;" th:text="${#temporals.format(user?.createdAt,'yyyy.MM.dd.')}">dátum</span>
+            </div>
+            <div class="d-flex justify-content-between py-2">
+              <span style="color:var(--muted);">Email állapot</span>
+              <span class="badge" style="background:#F0FDF4;color:#16A34A;font-size:11px;"><i class="fas fa-check me-1"></i>Aktív</span>
+            </div>
+          </div>
+          <a href="/dashboard" class="btn btn-primary btn-sm w-100 mt-3"><i class="fas fa-th-large me-2"></i>Vezérlőpult</a>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="row g-3 mb-4">
+          <div class="col-4"><div class="stat-card"><div class="stat-icon" style="background:#EEF4FF;"><i class="fas fa-book" style="color:#3B6FE8;"></i></div><div><div class="stat-val">–</div><div class="stat-lbl">Beiratkozott</div></div></div></div>
+          <div class="col-4"><div class="stat-card"><div class="stat-icon" style="background:#F0FDF4;"><i class="fas fa-trophy" style="color:#16A34A;"></i></div><div><div class="stat-val">–</div><div class="stat-lbl">Befejezett</div></div></div></div>
+          <div class="col-4"><div class="stat-card"><div class="stat-icon" style="background:#FFF7ED;"><i class="fas fa-certificate" style="color:#D97706;"></i></div><div><div class="stat-val">–</div><div class="stat-lbl">Tanúsítvány</div></div></div></div>
+        </div>
+        <div class="card-box">
+          <div class="card-box-head"><h5><i class="fas fa-cog me-2 text-primary"></i>Fiók beállítások</h5></div>
+          <div class="card-box-body">
+            <form>
+              <div class="row g-3 mb-3">
+                <div class="col-6"><label class="form-label">Keresztnév</label><input type="text" class="form-control" th:value="${user?.firstName}"></div>
+                <div class="col-6"><label class="form-label">Vezetéknév</label><input type="text" class="form-control" th:value="${user?.lastName}"></div>
+              </div>
+              <div class="mb-3"><label class="form-label">Email cím</label><input type="email" class="form-control" th:value="${user?.email}"></div>
+              <div class="mb-3"><label class="form-label">Felhasználónév</label><input type="text" class="form-control" th:value="${user?.username}" disabled><small style="color:var(--muted);font-size:12px;">A felhasználónév nem módosítható</small></div>
+              <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-2"></i>Mentés</button>
+            </form>
+          </div>
+        </div>
+        <div class="card-box">
+          <div class="card-box-head"><h5><i class="fas fa-lock me-2 text-primary"></i>Jelszó módosítása</h5></div>
+          <div class="card-box-body">
+            <form>
+              <div class="mb-3"><label class="form-label">Jelenlegi jelszó</label><input type="password" class="form-control"></div>
+              <div class="mb-3"><label class="form-label">Új jelszó</label><input type="password" class="form-control"></div>
+              <div class="mb-3"><label class="form-label">Megerősítés</label><input type="password" class="form-control"></div>
+              <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-key me-2"></i>Jelszó frissítése</button>
+            </form>
+          </div>
+        </div>
+        <div class="card-box" style="border-color:#FECDD3;">
+          <div class="card-box-head" style="background:#FFF1F2;"><h5 style="color:#9F1239;"><i class="fas fa-exclamation-triangle me-2"></i>Veszélyzóna</h5></div>
+          <div class="card-box-body">
+            <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">A fiók törlése végleges és visszafordíthatatlan művelet.</p>
+            <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash me-2"></i>Fiók törlése</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="site-footer">
+    <div class="row g-3">
+      <div class="col-md-4"><h5><i class="fas fa-graduation-cap me-2" style="color:#3B6FE8;"></i>ME-Learning</h5><p>Modern online tanulási platform.</p></div>
+      <div class="col-md-4"><h6>Linkek</h6><a href="/courses">Kurzusok</a><a href="/about">Rólunk</a></div>
+      <div class="col-md-4"><h6>Kapcsolat</h6><p><i class="fas fa-envelope me-2"></i><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="721b1c141d32171e1713001c1b1c155c1a07">[email&#160;protected]</a></p></div>
+    </div>
+    <hr class="footer-divider">
+    <div class="footer-copy">&copy; 2024 ME-Learning. Minden jog fenntartva.</div>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

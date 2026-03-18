@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title != null ? title + ' - E-Learning Platform' : 'E-Learning Platform'}">E-Learning Platform</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .register-card {
+            max-width: 500px;
+            margin: 0 auto;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .register-header {
+            text-align: center;
+            padding: 2rem 2rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .register-header i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .form-floating {
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            padding: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card register-card">
+                <div class="register-header">
+                    <i class="fas fa-user-plus"></i>
+                    <h3 class="fw-bold text-dark">Regisztráció</h3>
+                    <p class="text-muted">Hozd létre új fiókodat</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <div th:if="${error}" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span th:text="${error}">Hiba üzenet</span>
+                    </div>
+
+                    <form th:action="@{/register}" method="post" th:object="${user}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="firstName" th:field="*{firstName}"
+                                           placeholder="Keresztnév" required>
+                                    <label for="firstName">
+                                        <i class="fas fa-user me-2"></i>Keresztnév
+                                    </label>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="lastName" th:field="*{lastName}"
+                                           placeholder="Vezetéknév" required>
+                                    <label for="lastName">
+                                        <i class="fas fa-user me-2"></i>Vezetéknév
+                                    </label>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="username" th:field="*{username}"
+                                   placeholder="Felhasználónév" required>
+                            <label for="username">
+                                <i class="fas fa-at me-2"></i>Felhasználónév
+                            </label>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control" id="email" th:field="*{email}"
+                                   placeholder="Email cím" required>
+                            <label for="email">
+                                <i class="fas fa-envelope me-2"></i>Email cím
+                            </label>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="password" th:field="*{password}"
+                                   placeholder="Jelszó" required minlength="6">
+                            <label for="password">
+                                <i class="fas fa-lock me-2"></i>Jelszó
+                            </label>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <select class="form-select" id="role" th:field="*{role}" required>
+                                <option value="">Válassz szerepkört</option>
+                                <option value="STUDENT">Hallgató</option>
+                                <option value="INSTRUCTOR">Oktató</option>
+                            </select>
+                            <label for="role">
+                                <i class="fas fa-user-tag me-2"></i>Szerepkör
+                            </label>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('role')}" th:errors="*{role}"></div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                Elfogadom a <a href="/terms" class="text-decoration-none">felhasználási feltételeket</a>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="fas fa-user-plus me-2"></i>Regisztráció
+                        </button>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="text-muted">Már van fiókod?</p>
+                        <a href="/login" class="btn btn-outline-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>Bejelentkezés
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <a href="/" class="text-white text-decoration-none">
+                    <i class="fas fa-arrow-left me-2"></i>Vissza a főoldalra
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

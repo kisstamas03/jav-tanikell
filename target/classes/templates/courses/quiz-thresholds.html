@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kvíz beállítások - E-Learning Platform</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link th:href="@{/css/main.css}" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="/" class="sidebar-brand">
+    <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+    <div><div class="brand-name">E-Learning</div><div class="brand-sub">Platform</div></div>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Navigáció</div>
+    <a href="/" class="sidebar-link"><i class="fas fa-home"></i> Főoldal</a>
+    <a href="/courses" class="sidebar-link"><i class="fas fa-book-open"></i> Kurzusok</a>
+    <div class="nav-section-label">Fiók</div>
+    <a href="/dashboard" class="sidebar-link"><i class="fas fa-th-large"></i> Vezérlőpult</a>
+    <a th:href="@{/courses/{id}/manage(id=${course.id})}" class="sidebar-link"><i class="fas fa-cog"></i> Vissza a kezeléshez</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="u-avatar"><i class="fas fa-user"></i></div>
+      <div><div class="u-name" sec:authentication="name">Felhasználó</div><div class="u-role">Oktató</div></div>
+    </div>
+    <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés</button></form>
+  </div>
+</aside>
+
+<div class="main-content">
+  <div class="page-header">
+    <h1><i class="fas fa-sliders-h me-2"></i>Kvíz beállítások</h1>
+    <p th:text="|${course.title} › ${quiz.title}|">Kurzus › Kvíz</p>
+  </div>
+
+  <div class="content">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+          <i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+          <i class="fas fa-exclamation-triangle me-2"></i><span th:text="${error}"></span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="form-card">
+          <form th:action="@{/courses/{cId}/quizzes/{qId}/thresholds(cId=${course.id},qId=${quiz.id})}" method="post">
+
+            <!-- Kitöltési kísérletek -->
+            <div class="section-title"><i class="fas fa-redo me-2"></i>Kitöltési szabály</div>
+            <div class="attempt-toggle mb-4">
+              <div class="toggle-info">
+                <h6><i class="fas fa-infinity me-2 text-primary"></i>Több kitöltés engedélyezése</h6>
+                <p>Ha be van kapcsolva: a diákok bármennyiszer kitölthetik. Ha ki van kapcsolva: csak 1 alkalommal.</p>
+              </div>
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="allowMultipleAttempts"
+                       name="allowMultipleAttempts" value="true"
+                       th:checked="${quiz.allowMultipleAttempts}">
+              </div>
+            </div>
+
+            <!-- Élő előnézet sáv -->
+            <div class="section-title mt-4"><i class="fas fa-chart-bar me-2"></i>Ponthatárok — élő előnézet</div>
+            <div class="grade-bar" id="gradeBar">
+              <div class="grade-bar-seg" id="bar1" style="background:#ef4444;"></div>
+              <div class="grade-bar-seg" id="bar2" style="background:#f97316;"></div>
+              <div class="grade-bar-seg" id="bar3" style="background:#eab308;"></div>
+              <div class="grade-bar-seg" id="bar4" style="background:#22c55e;"></div>
+              <div class="grade-bar-seg" id="bar5" style="background:#2563eb;"></div>
+            </div>
+            <div class="d-flex justify-content-between text-muted mb-4" style="font-size:11px;">
+              <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+            </div>
+
+            <!-- Jeles (5) -->
+            <div class="grade-row">
+              <div class="grade-badge" style="background:#2563eb;">5</div>
+              <div class="grade-label">
+                <div class="grade-name">Jeles</div>
+                <div class="grade-desc">ettől felfelé</div>
+              </div>
+              <div class="grade-range">
+                <input type="range" id="excellent" name="excellentThreshold"
+                       th:value="${quiz.excellentThreshold}" min="50" max="100" step="5"
+                       oninput="syncVal('excellent','excellentVal'); updateBar()">
+                <span class="range-val"><span id="excellentVal" th:text="${quiz.excellentThreshold}">85</span>%</span>
+              </div>
+            </div>
+
+            <!-- Jó (4) -->
+            <div class="grade-row">
+              <div class="grade-badge" style="background:#22c55e;">4</div>
+              <div class="grade-label">
+                <div class="grade-name">Jó</div>
+                <div class="grade-desc">ettől – jeles előtt</div>
+              </div>
+              <div class="grade-range">
+                <input type="range" id="good" name="goodThreshold"
+                       th:value="${quiz.goodThreshold}" min="40" max="95" step="5"
+                       oninput="syncVal('good','goodVal'); updateBar()">
+                <span class="range-val"><span id="goodVal" th:text="${quiz.goodThreshold}">70</span>%</span>
+              </div>
+            </div>
+
+            <!-- Közepes (3) -->
+            <div class="grade-row">
+              <div class="grade-badge" style="background:#eab308;">3</div>
+              <div class="grade-label">
+                <div class="grade-name">Közepes</div>
+                <div class="grade-desc">ettől – jó előtt</div>
+              </div>
+              <div class="grade-range">
+                <input type="range" id="average" name="averageThreshold"
+                       th:value="${quiz.averageThreshold}" min="30" max="85" step="5"
+                       oninput="syncVal('average','averageVal'); updateBar()">
+                <span class="range-val"><span id="averageVal" th:text="${quiz.averageThreshold}">55</span>%</span>
+              </div>
+            </div>
+
+            <!-- Elégséges (2) -->
+            <div class="grade-row">
+              <div class="grade-badge" style="background:#f97316;">2</div>
+              <div class="grade-label">
+                <div class="grade-name">Elégséges</div>
+                <div class="grade-desc">ettől – közepes előtt</div>
+              </div>
+              <div class="grade-range">
+                <input type="range" id="passing" name="passingThreshold"
+                       th:value="${quiz.passingThreshold}" min="10" max="70" step="5"
+                       oninput="syncVal('passing','passingVal'); updateBar()">
+                <span class="range-val"><span id="passingVal" th:text="${quiz.passingThreshold}">40</span>%</span>
+              </div>
+            </div>
+
+            <!-- Elégtelen (1) -->
+            <div class="grade-row">
+              <div class="grade-badge" style="background:#ef4444;">1</div>
+              <div class="grade-label">
+                <div class="grade-name">Elégtelen</div>
+                <div class="grade-desc">elégséges alatt</div>
+              </div>
+              <div class="grade-range">
+                <span class="text-muted small">0% – elégséges határ alatt automatikus</span>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end mt-4">
+              <a th:href="@{/courses/{id}/manage(id=${course.id})}" class="btn btn-outline-secondary">
+                <i class="fas fa-times me-2"></i>Mégse
+              </a>
+              <a th:href="@{/courses/{cId}/quizzes/{qId}/results(cId=${course.id},qId=${quiz.id})}"
+                 class="btn btn-outline-primary">
+                <i class="fas fa-list-alt me-2"></i>Eredmények
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i>Mentés
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>Fontos:</strong> A ponthatároknak csökkenő sorrendben kell lenniük. A kitöltési szabály változtatása
+          csak az új kitöltésekre vonatkozik.
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="row">
+      <div class="col-md-4 mb-3"><h5><i class="fas fa-graduation-cap me-2"></i>E-Learning Platform</h5><p>Modern online tanulási platform mindenkinek.</p></div>
+      <div class="col-md-4 mb-3"><h6>Gyors linkek</h6><a href="/courses">Kurzusok</a></div>
+      <div class="col-md-4 mb-3"><h6>Kapcsolat</h6><p><i class="fas fa-envelope me-2"></i><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c8a1a6aea788ada4ada9baa6a1a6afe6a0bd">[email&#160;protected]</a></p></div>
+    </div>
+    <hr class="footer-divider">
+    <div class="footer-copy">&copy; 2024 E-Learning Platform. Minden jog fenntartva.</div>
+  </footer>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+  function syncVal(inputId, spanId) {
+    document.getElementById(spanId).textContent = document.getElementById(inputId).value;
+  }
+  function updateBar() {
+    const p = parseInt(document.getElementById('passing').value);
+    const a = parseInt(document.getElementById('average').value);
+    const g = parseInt(document.getElementById('good').value);
+    const e = parseInt(document.getElementById('excellent').value);
+    document.getElementById('bar1').style.flex = p;
+    document.getElementById('bar2').style.flex = Math.max(0, a - p);
+    document.getElementById('bar3').style.flex = Math.max(0, g - a);
+    document.getElementById('bar4').style.flex = Math.max(0, e - g);
+    document.getElementById('bar5').style.flex = Math.max(0, 100 - e);
+    document.getElementById('bar1').textContent = p > 6 ? '1' : '';
+    document.getElementById('bar2').textContent = (a-p) > 6 ? '2' : '';
+    document.getElementById('bar3')
