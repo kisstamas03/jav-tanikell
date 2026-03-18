@@ -2,6 +2,7 @@ package com.melearning.elearning.controller;
 
 import com.melearning.elearning.model.Role;
 import com.melearning.elearning.model.User;
+import com.melearning.elearning.service.EmailService;
 import com.melearning.elearning.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -19,6 +20,9 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private EmailService emailService;
 
     @GetMapping("/register")
     public String showRegistrationForm(Model model) {
@@ -48,8 +52,11 @@ public class AuthController {
             return "register";
         }
 
+
         try {
             userService.saveUser(user);
+            // ← Email küldés regisztráció után
+            emailService.sendRegistrationEmail(user.getEmail(), user.getFirstName());
             redirectAttributes.addFlashAttribute("success", "Sikeres regisztráció! Most már bejelentkezhetsz.");
             return "redirect:/login";
         } catch (Exception e) {

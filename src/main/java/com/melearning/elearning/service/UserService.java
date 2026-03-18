@@ -18,6 +18,9 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmailService emailService;
+
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
@@ -45,5 +48,19 @@ public class UserService {
 
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+
+    public boolean changePassword(User user, String currentPassword, String newPassword) {
+        // Ellenőrzés: helyes-e a jelenlegi jelszó?
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return false;
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        // Email értesítő küldése
+        emailService.sendPasswordChangeEmail(user.getEmail(), user.getFirstName());
+        return true;
     }
 }
