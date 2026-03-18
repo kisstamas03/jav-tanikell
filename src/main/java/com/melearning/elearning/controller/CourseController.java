@@ -5,6 +5,7 @@ import com.melearning.elearning.model.Role;
 import com.melearning.elearning.model.User;
 import com.melearning.elearning.service.CourseService;
 import com.melearning.elearning.service.PresentationService;
+import com.melearning.elearning.service.QuizService;
 import com.melearning.elearning.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -32,28 +33,22 @@ public class CourseController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private QuizService quizService;
+
     // -----------------------------------------------------------------------
     // Segédmetódusok
     // -----------------------------------------------------------------------
 
-    /**
-     * Visszaadja a bejelentkezett felhasználót, vagy null-t ha nincs.
-     */
     private Optional<User> getCurrentUser(Authentication auth) {
         if (auth == null) return Optional.empty();
         return userService.getUserByUsername(auth.getName());
     }
 
-    /**
-     * Ellenőrzi, hogy a felhasználó ADMIN-e.
-     */
     private boolean isAdmin(User user) {
         return user.getRole() == Role.ADMIN;
     }
 
-    /**
-     * Ellenőrzi, hogy a felhasználó a kurzus oktatója VAGY admin-e.
-     */
     private boolean isOwnerOrAdmin(Course course, User user) {
         return isAdmin(user) || course.getInstructor().getId().equals(user.getId());
     }
@@ -69,20 +64,14 @@ public class CourseController {
 
         if (userOpt.isPresent()) {
             User currentUser = userOpt.get();
-
             if (currentUser.getRole() == Role.INSTRUCTOR || isAdmin(currentUser)) {
-                // Oktató és admin lát mindent
                 courses = courseService.getAllCourses();
             } else {
-                // Diák: publikus + a saját beiratkozott privát kurzusok
-                List<Course> publicCourses = courseService.getPublicCourses();
+                List<Course> publicCourses  = courseService.getPublicCourses();
                 List<Course> enrolledCourses = courseService.getEnrolledCourses(currentUser);
-
                 courses = new ArrayList<>(publicCourses);
                 for (Course enrolledCourse : enrolledCourses) {
-                    if (!courses.contains(enrolledCourse)) {
-                        courses.add(enrolledCourse);
-                    }
+                    if (!courses.contains(enrolledCourse)) courses.add(enrolledCourse);
                 }
             }
         } else {
@@ -94,34 +83,31 @@ public class CourseController {
     }
 
     // -----------------------------------------------------------------------
-    // Kurzus megtekintése
+    // Kurzus megtekintése  ← ITT VOLT A HIBA: quizzes nem lett átadva
     // -----------------------------------------------------------------------
 
     @GetMapping("/{id}")
     public String viewCourse(@PathVariable Long id, Model model, Authentication auth) {
         Optional<Course> courseOpt = courseService.getCourseById(id);
-        if (courseOpt.isEmpty()) {
-            return "redirect:/courses";
-        }
+        if (courseOpt.isEmpty()) return "redirect:/courses";
 
         Course courseObj = courseOpt.get();
         Optional<User> userOpt = getCurrentUser(auth);
 
-        // Privát kurzus: csak az oktató, admin vagy beiratkozott diák láthatja
+        // Privát kurzus ellenőrzés
         if (!courseObj.getIsPublic()) {
-            if (userOpt.isEmpty()) {
-                return "redirect:/courses";
-            }
+            if (userOpt.isEmpty()) return "redirect:/courses";
             User currentUser = userOpt.get();
             boolean canView = isOwnerOrAdmin(courseObj, currentUser)
                     || courseObj.getEnrolledUsers().contains(currentUser);
-            if (!canView) {
-                return "redirect:/courses";
-            }
+            if (!canView) return "redirect:/courses";
         }
 
         model.addAttribute("course", courseObj);
         model.addAttribute("presentations", presentationService.getPresentationsByCourse(courseObj));
+
+        // ← JAVÍTÁS: quizzes átadása a nézetnek
+        model.addAttribute("quizzes", quizService.getQuizzesByCourse(courseObj));
 
         userOpt.ifPresent(user -> {
             model.addAttribute("isEnrolled", courseObj.getEnrolledUsers().contains(user));
@@ -158,8 +144,6 @@ public class CourseController {
         }
 
         User instructor = instructorOpt.get();
-
-        // Extra ellenőrzés: csak INSTRUCTOR vagy ADMIN hozhat létre kurzust
         if (instructor.getRole() != Role.INSTRUCTOR && !isAdmin(instructor)) {
             redirectAttributes.addFlashAttribute("error", "Nincs jogosultságod kurzus létrehozásához!");
             return "redirect:/courses";
@@ -199,6 +183,49 @@ public class CourseController {
     }
 
     // -----------------------------------------------------------------------
+    // Prezentáció hozzáadása meglévő kurzushoz (manage oldalról)
+    // -----------------------------------------------------------------------
+
+    @PostMapping("/{id}/add-presentations")
+    public String addPresentations(@PathVariable Long id,
+                                   @RequestParam("newPresentations") MultipartFile[] files,
+                                   Authentication auth,
+                                   RedirectAttributes redirectAttributes) {
+
+        Optional<Course> courseOpt = courseService.getCourseById(id);
+        Optional<User> userOpt = getCurrentUser(auth);
+
+        if (courseOpt.isEmpty() || userOpt.isEmpty()) return "redirect:/courses";
+
+        Course course = courseOpt.get();
+        User user = userOpt.get();
+
+        if (!isOwnerOrAdmin(course, user)) {
+            redirectAttributes.addFlashAttribute("error", "Nincs jogosultságod ehhez!");
+            return "redirect:/courses/" + id;
+        }
+
+        try {
+            int order = presentationService.getPresentationsByCourse(course).size() + 1;
+            for (MultipartFile file : files) {
+                if (!file.isEmpty()) {
+                    String fileName = file.getOriginalFilename();
+                    if (fileName != null && (fileName.toLowerCase().endsWith(".pdf") ||
+                            fileName.toLowerCase().endsWith(".ppt") ||
+                            fileName.toLowerCase().endsWith(".pptx"))) {
+                        presentationService.processAndSavePresentation(file, course, order++);
+                    }
+                }
+            }
+            redirectAttributes.addFlashAttribute("success", "Prezentációk sikeresen feltöltve!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Hiba a feltöltés során: " + e.getMessage());
+        }
+
+        return "redirect:/courses/" + id + "/manage";
+    }
+
+    // -----------------------------------------------------------------------
     // Beiratkozás
     // -----------------------------------------------------------------------
 
@@ -208,20 +235,16 @@ public class CourseController {
         Optional<Course> courseOpt = courseService.getCourseById(id);
         Optional<User> userOpt = getCurrentUser(auth);
 
-        if (courseOpt.isEmpty() || userOpt.isEmpty()) {
-            return "redirect:/courses";
-        }
+        if (courseOpt.isEmpty() || userOpt.isEmpty()) return "redirect:/courses";
 
         Course course = courseOpt.get();
         User user = userOpt.get();
 
-        // Oktató nem iratkozhat be saját kurzusára
         if (isOwnerOrAdmin(course, user)) {
             redirectAttributes.addFlashAttribute("error", "Oktatóként nem iratkozhatsz be saját kurzusodra!");
             return "redirect:/courses/" + id;
         }
 
-        // Privát kurzusra csak az oktató adhat hozzá diákot (nem önmaga)
         if (!course.getIsPublic()) {
             redirectAttributes.addFlashAttribute("error",
                     "Ez egy privát kurzus, csak az oktató adhat hozzá diákokat!");
@@ -233,15 +256,13 @@ public class CourseController {
     }
 
     // -----------------------------------------------------------------------
-    // Kurzus kezelése (csak saját oktató vagy admin)
+    // Kurzus kezelése
     // -----------------------------------------------------------------------
 
     @GetMapping("/{id}/manage")
     public String manageCourse(@PathVariable Long id, Model model, Authentication auth) {
         Optional<Course> courseOpt = courseService.getCourseById(id);
-        if (courseOpt.isEmpty()) {
-            return "redirect:/courses";
-        }
+        if (courseOpt.isEmpty()) return "redirect:/courses";
 
         Course courseObj = courseOpt.get();
         Optional<User> userOpt = getCurrentUser(auth);
@@ -251,6 +272,7 @@ public class CourseController {
         }
 
         model.addAttribute("course", courseObj);
+        model.addAttribute("quizzes", quizService.getQuizzesByCourse(courseObj));
         model.addAttribute("allStudents", userService.getAllUsers().stream()
                 .filter(u -> u.getRole() == Role.STUDENT)
                 .toList());
@@ -267,20 +289,17 @@ public class CourseController {
         Optional<User> studentOpt = userService.getUserById(studentId);
         Optional<User> currentUserOpt = getCurrentUser(auth);
 
-        if (courseOpt.isEmpty() || studentOpt.isEmpty() || currentUserOpt.isEmpty()) {
+        if (courseOpt.isEmpty() || studentOpt.isEmpty() || currentUserOpt.isEmpty())
             return "redirect:/courses";
-        }
 
         Course course = courseOpt.get();
         User currentUser = currentUserOpt.get();
 
-        // Csak az oktató vagy admin adhat hozzá diákot
         if (!isOwnerOrAdmin(course, currentUser)) {
             redirectAttributes.addFlashAttribute("error", "Nincs jogosultságod ehhez a művelethez!");
             return "redirect:/courses/" + id;
         }
 
-        // Csak STUDENT szerepkörű felhasználót lehet hozzáadni
         User student = studentOpt.get();
         if (student.getRole() != Role.STUDENT) {
             redirectAttributes.addFlashAttribute("error", "Csak hallgatókat lehet beiratkoztatni!");
@@ -302,14 +321,12 @@ public class CourseController {
         Optional<User> studentOpt = userService.getUserById(studentId);
         Optional<User> currentUserOpt = getCurrentUser(auth);
 
-        if (courseOpt.isEmpty() || studentOpt.isEmpty() || currentUserOpt.isEmpty()) {
+        if (courseOpt.isEmpty() || studentOpt.isEmpty() || currentUserOpt.isEmpty())
             return "redirect:/courses";
-        }
 
         Course course = courseOpt.get();
         User currentUser = currentUserOpt.get();
 
-        // Csak az oktató vagy admin távolíthat el diákot
         if (!isOwnerOrAdmin(course, currentUser)) {
             redirectAttributes.addFlashAttribute("error", "Nincs jogosultságod ehhez a művelethez!");
             return "redirect:/courses/" + id;

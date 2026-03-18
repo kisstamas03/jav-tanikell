@@ -1,229 +1,102 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oktató vezérlőpult - E-Learning Platform</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #2563eb; --primary-light: #3b82f6; --sidebar-bg: #0f172a; --body-bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; --muted: #64748b; }
-        * { box-sizing: border-box; }
-        body { background: var(--body-bg); font-family: 'DM Sans', sans-serif; color: var(--text); margin: 0; display: flex; min-height: 100vh; }
-
-        .sidebar { width: 250px; background: var(--sidebar-bg); min-height: 100vh; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 100; }
-        .sidebar-brand { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .sidebar-brand .brand-icon { width: 36px; height: 36px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0; }
-        .sidebar-brand .brand-name { font-size: 15px; font-weight: 700; color: white; line-height: 1.2; }
-        .sidebar-brand .brand-sub { font-size: 11px; color: rgba(255,255,255,0.3); }
-        .sidebar-nav { padding: 16px 12px; flex: 1; }
-        .nav-section-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 8px 8px; margin-top: 8px; }
-        .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: all 0.15s; margin-bottom: 2px; }
-        .sidebar-link i { width: 16px; text-align: center; font-size: 13px; }
-        .sidebar-link:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
-        .sidebar-link.active { background: var(--primary); color: white; }
-        .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.07); }
-        .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; }
-        .sidebar-user .u-avatar { width: 32px; height: 32px; background: var(--primary); border-radius: 7px; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; flex-shrink: 0; }
-        .sidebar-user .u-name { font-size: 13px; font-weight: 600; color: white; }
-        .sidebar-user .u-role { font-size: 11px; color: rgba(255,255,255,0.35); }
-        .btn-logout { width: 100%; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); border: none; padding: 9px; border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; }
-        .btn-logout:hover { background: rgba(255,255,255,0.1); color: white; }
-
-        .main-content { margin-left: 250px; flex: 1; display: flex; flex-direction: column; }
-        .topbar { background: white; padding: 16px 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
-        .topbar-title { font-size: 18px; font-weight: 700; }
-        .topbar-title span { color: var(--primary); }
-
-        .page-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 40px 32px; }
-        .page-header h1 { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
-        .page-header p { margin: 0; opacity: 0.85; font-size: 14px; }
-
-        .content { padding: 28px 32px; flex: 1; }
-
-        .stat-card { background: white; border-radius: 12px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); border: 1px solid var(--border); display: flex; align-items: center; gap: 16px; height: 100%; }
-        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-        .stat-value { font-size: 26px; font-weight: 700; color: var(--primary); line-height: 1; margin-bottom: 3px; }
-        .stat-label { font-size: 12px; color: var(--muted); }
-
-        .course-card { background: white; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.07); overflow: hidden; height: 100%; transition: box-shadow 0.2s, transform 0.2s; }
-        .course-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.1); transform: translateY(-2px); }
-        .course-card-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 20px; position: relative; }
-        .course-card-header h6 { color: white; font-size: 15px; font-weight: 700; margin-bottom: 6px; }
-        .course-card-header p { color: rgba(255,255,255,0.65); font-size: 12px; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .course-card-header .vis-badge { position: absolute; top: 14px; right: 14px; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
-        .course-card-body { padding: 16px 18px; }
-        .course-meta { display: flex; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
-        .course-meta span { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
-
-        .empty-card { background: white; border: 2px dashed var(--border); border-radius: 12px; padding: 48px; text-align: center; color: var(--muted); }
-        .empty-card i { font-size: 36px; margin-bottom: 12px; display: block; opacity: 0.3; }
-
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .section-title { font-size: 15px; font-weight: 700; margin: 0; }
-
-        .site-footer { background: #0f172a; color: rgba(255,255,255,0.6); padding: 40px 32px 24px; margin-top: auto; }
-        .site-footer h5, .site-footer h6 { color: white; font-size: 14px; margin-bottom: 12px; }
-        .site-footer a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 13px; display: block; margin-bottom: 4px; }
-        .site-footer a:hover { color: rgba(255,255,255,0.8); }
-        .site-footer p { font-size: 13px; }
-        .footer-divider { border-color: rgba(255,255,255,0.08); margin: 20px 0 16px; }
-        .footer-copy { font-size: 12px; color: rgba(255,255,255,0.25); text-align: center; }
-    </style>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oktató vezérlőpult – ME-Learning</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link th:href="@{/css/main.css}" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
 <aside class="sidebar">
-    <a href="/" class="sidebar-brand">
-        <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
-        <div>
-            <div class="brand-name">E-Learning</div>
-            <div class="brand-sub">Oktató panel</div>
-        </div>
-    </a>
-    <nav class="sidebar-nav">
-        <div class="nav-section-label">Navigáció</div>
-        <a href="/dashboard/instructor" class="sidebar-link active"><i class="fas fa-th-large"></i> Áttekintés</a>
-        <a href="/courses" class="sidebar-link"><i class="fas fa-book-open"></i> Összes kurzus</a>
-        <a href="/courses/create" class="sidebar-link"><i class="fas fa-plus-circle"></i> Új kurzus</a>
-        <a href="/my-courses" class="sidebar-link"><i class="fas fa-layer-group"></i> Saját kurzusok</a>
-        <div class="nav-section-label">Fiók</div>
-        <a href="/" class="sidebar-link"><i class="fas fa-home"></i> Főoldal</a>
-        <a href="/profile" class="sidebar-link"><i class="fas fa-user"></i> Profil</a>
-        <a href="/about" class="sidebar-link"><i class="fas fa-info-circle"></i> Rólunk</a>
-    </nav>
-    <div class="sidebar-footer">
-        <div class="sidebar-user">
-            <div class="u-avatar"><i class="fas fa-chalkboard-teacher"></i></div>
-            <div>
-                <div class="u-name" th:text="${currentUser?.username ?: 'Oktató'}">Oktató</div>
-                <div class="u-role">Oktató</div>
-            </div>
-        </div>
-        <form th:action="@{/logout}" method="post">
-            <button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés</button>
-        </form>
+  <a href="/" class="sidebar-brand">
+    <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+    <div><div class="brand-name">ME-Learning</div><div class="brand-sub">Platform</div></div>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Navigáció</div>
+    <a href="/" class="sl "><i class="fas fa-home"></i>Főoldal</a>
+    <a href="/courses" class="sl "><i class="fas fa-book-open"></i>Kurzusok</a>
+    <a href="/about" class="sl "><i class="fas fa-info-circle"></i>Rólunk</a>
+    <div sec:authorize="isAuthenticated()">
+      <div class="nav-label">Fiók</div>
+      <a href="/dashboard" class="sl active"><i class="fas fa-th-large"></i>Vezérlőpult</a>
+      <a href="/my-courses" class="sl "><i class="fas fa-layer-group"></i>Kurzusaim</a>
+      <a href="/profile" class="sl "><i class="fas fa-user"></i>Profil</a>
+      <div sec:authorize="hasAnyRole('INSTRUCTOR','ADMIN')">
+        <a href="/courses/create" class="sl "><i class="fas fa-plus-circle"></i>Új kurzus</a>
+      </div>
     </div>
+  </nav>
+  <div sec:authorize="isAuthenticated()" class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="u-avatar"><i class="fas fa-user"></i></div>
+      <div><div class="u-name" sec:authentication="name">Felhasználó</div><div class="u-role">Bejelentkezve</div></div>
+    </div>
+    <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés</button></form>
+  </div>
+  <div sec:authorize="isAnonymous()" class="sidebar-auth">
+    <a href="/login" class="btn-ao"><i class="fas fa-sign-in-alt me-2"></i>Bejelentkezés</a>
+    <a href="/register" class="btn-as"><i class="fas fa-user-plus me-2"></i>Regisztráció</a>
+  </div>
 </aside>
-
 <div class="main-content">
+  <div class="page-header"><div class="d-flex justify-content-between align-items-center"><div><h1><i class='fas fa-chalkboard-teacher me-2'></i>Oktató vezérlőpult</h1><p>Üdv, <strong th:text="${currentUser?.firstName ?: 'Oktató'}">Oktató</strong>! Kezeld kurzusaidat.</p></div><div class="header-actions"><a href="/courses/create" class="btn btn-sm" style="background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);"><i class="fas fa-plus me-1"></i>Új kurzus</a></div></div></div>
+  <div class="content">
 
-    <div class="topbar">
-        <div class="topbar-title">Oktató <span>vezérlőpult</span></div>
-        <a href="/courses/create" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus me-1"></i>Új kurzus
-        </a>
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-3"><i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-lg-3 col-sm-6"><div class="stat-card"><div class="stat-icon" style="background:#EEF4FF;"><i class="fas fa-book" style="color:#3B6FE8;"></i></div><div><div class="stat-val" th:text="${myCourses.size()}">0</div><div class="stat-lbl">Saját kurzus</div></div></div></div>
+      <div class="col-lg-3 col-sm-6"><div class="stat-card"><div class="stat-icon" style="background:#F0FDF4;"><i class="fas fa-users" style="color:#16A34A;"></i></div><div><div class="stat-val" th:text="${totalStudents}">0</div><div class="stat-lbl">Beiratkozott diák</div></div></div></div>
+      <div class="col-lg-3 col-sm-6"><div class="stat-card"><div class="stat-icon" style="background:#EFF6FF;"><i class="fas fa-globe" style="color:#3B82F6;"></i></div><div><div class="stat-val" th:text="${publicCourses}">0</div><div class="stat-lbl">Publikus kurzus</div></div></div></div>
+      <div class="col-lg-3 col-sm-6"><div class="stat-card"><div class="stat-icon" style="background:#F8FAFC;"><i class="fas fa-lock" style="color:#64748B;"></i></div><div><div class="stat-val" th:text="${privateCourses}">0</div><div class="stat-lbl">Privát kurzus</div></div></div></div>
     </div>
 
-    <div class="page-header">
-        <h1><i class="fas fa-chalkboard-teacher me-2"></i>Oktató vezérlőpult</h1>
-        <p>Üdv, <strong th:text="${currentUser?.firstName ?: 'Oktató'}">Oktató</strong>! Kezeld kurzusaidat és kövesd a diákok előrehaladását.</p>
+    <div class="section-hdr">
+      <h5><i class="fas fa-book-open me-2 text-primary"></i>Saját kurzusaim</h5>
+      <span style="font-size:13px;color:var(--muted);" th:text="${myCourses.size()} + ' db'"></span>
     </div>
-
-    <div class="content">
-
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i><span th:text="${error}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <!-- Statisztikák -->
-        <div class="row g-3 mb-4">
-            <div class="col-lg-3 col-sm-6">
-                <div class="stat-card">
-                    <div class="stat-icon bg-primary bg-opacity-10"><i class="fas fa-book text-primary"></i></div>
-                    <div><div class="stat-value" th:text="${myCourses.size()}">0</div><div class="stat-label">Saját kurzus</div></div>
-                </div>
+    <div class="row g-3" th:if="${myCourses != null and not myCourses.empty}">
+      <div class="col-lg-4 col-md-6" th:each="c : ${myCourses}">
+        <div class="course-card">
+          <div class="cc-header">
+            <span th:if="${c.isPublic}" class="vis-badge" style="background:rgba(255,255,255,.2);color:#fff;">Publikus</span>
+            <span th:unless="${c.isPublic}" class="vis-badge" style="background:rgba(0,0,0,.25);color:rgba(255,255,255,.8);">Privát</span>
+            <h6 th:text="${c.title}">Cím</h6>
+            <p th:text="${c.description}">Leírás</p>
+          </div>
+          <div class="cc-body">
+            <div class="cc-meta">
+              <span><i class="fas fa-users me-1"></i><span th:text="${c.enrolledUsers.size()} + ' diák'">0</span></span>
+              <span><i class="fas fa-file-alt me-1"></i><span th:text="${c.lessons.size()} + ' lecke'">0</span></span>
+              <span><i class="fas fa-calendar-alt me-1"></i><span th:text="${#temporals.format(c.createdAt,'yyyy.MM.dd.')}">dátum</span></span>
             </div>
-            <div class="col-lg-3 col-sm-6">
-                <div class="stat-card">
-                    <div class="stat-icon bg-success bg-opacity-10"><i class="fas fa-users text-success"></i></div>
-                    <div><div class="stat-value" th:text="${totalStudents}">0</div><div class="stat-label">Beiratkozott diák</div></div>
-                </div>
+            <div class="d-flex gap-2">
+              <a th:href="@{/courses/{id}(id=${c.id})}" class="btn btn-sm btn-outline-primary flex-fill"><i class="fas fa-eye me-1"></i>Megtekint</a>
+              <a th:href="@{/courses/{id}/manage(id=${c.id})}" class="btn btn-sm btn-primary flex-fill"><i class="fas fa-cog me-1"></i>Kezelés</a>
             </div>
-            <div class="col-lg-3 col-sm-6">
-                <div class="stat-card">
-                    <div class="stat-icon bg-info bg-opacity-10"><i class="fas fa-globe text-info"></i></div>
-                    <div><div class="stat-value" th:text="${publicCourses}">0</div><div class="stat-label">Publikus kurzus</div></div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-sm-6">
-                <div class="stat-card">
-                    <div class="stat-icon bg-secondary bg-opacity-10"><i class="fas fa-lock text-secondary"></i></div>
-                    <div><div class="stat-value" th:text="${privateCourses}">0</div><div class="stat-label">Privát kurzus</div></div>
-                </div>
-            </div>
+          </div>
         </div>
-
-        <!-- Kurzusok -->
-        <div class="section-header">
-            <h5 class="section-title"><i class="fas fa-book-open me-2 text-primary"></i>Saját kurzusaim</h5>
-            <span class="text-muted small" th:text="${myCourses.size()} + ' db'"></span>
-        </div>
-
-        <div th:if="${myCourses != null and not myCourses.empty}" class="row g-3">
-            <div class="col-lg-4 col-md-6" th:each="c : ${myCourses}">
-                <div class="course-card">
-                    <div class="course-card-header">
-                        <span th:if="${c.isPublic}"  class="vis-badge bg-white bg-opacity-25 text-white">Publikus</span>
-                        <span th:if="${!c.isPublic}" class="vis-badge bg-dark bg-opacity-25 text-white">Privát</span>
-                        <h6 th:text="${c.title}">Kurzus</h6>
-                        <p th:text="${c.description}">Leírás</p>
-                    </div>
-                    <div class="course-card-body">
-                        <div class="course-meta">
-                            <span><i class="fas fa-users"></i> <span th:text="${c.enrolledUsers.size()} + ' diák'">0</span></span>
-                            <span><i class="fas fa-file-alt"></i> <span th:text="${c.lessons.size()} + ' lecke'">0</span></span>
-                            <span><i class="fas fa-calendar-alt"></i> <span th:text="${#temporals.format(c.createdAt,'yyyy.MM.dd.')}">dátum</span></span>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <a th:href="@{/courses/{id}(id=${c.id})}" class="btn btn-outline-primary btn-sm flex-fill">
-                                <i class="fas fa-eye me-1"></i>Megtekint
-                            </a>
-                            <a th:href="@{/courses/{id}/manage(id=${c.id})}" class="btn btn-primary btn-sm flex-fill">
-                                <i class="fas fa-cog me-1"></i>Kezelés
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div th:if="${myCourses == null or myCourses.empty}" class="empty-card">
-            <i class="fas fa-book-open"></i>
-            <p class="fw-semibold mb-1">Még nincs kurzusod</p>
-            <p class="small mb-3">Hozd létre az első kurzusodat és tanítsd a diákokat!</p>
-            <a href="/courses/create" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>Kurzus létrehozása
-            </a>
-        </div>
-
+      </div>
     </div>
-
-    <footer class="site-footer">
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <h5><i class="fas fa-graduation-cap me-2"></i>E-Learning Platform</h5>
-                <p>Modern online tanulási platform mindenkinek.</p>
-            </div>
-            <div class="col-md-4 mb-3">
-                <h6>Gyors linkek</h6>
-                <a href="/courses">Kurzusok</a><a href="/about">Rólunk</a>
-            </div>
-            <div class="col-md-4 mb-3">
-                <h6>Kapcsolat</h6>
-                <p><i class="fas fa-envelope me-2"></i>info@elearning.hu</p>
-            </div>
-        </div>
-        <hr class="footer-divider">
-        <div class="footer-copy">&copy; 2024 E-Learning Platform. Minden jog fenntartva.</div>
-    </footer>
-
+    <div th:if="${myCourses == null or myCourses.empty}" class="empty-dash">
+      <i class="fas fa-book-open"></i>
+      <p class="fw-bold mb-1">Még nincs kurzusod</p>
+      <p class="small mb-3">Hozd létre az első kurzusodat és tanítsd a diákokat!</p>
+      <a href="/courses/create" class="btn btn-primary btn-sm"><i class="fas fa-plus me-2"></i>Kurzus létrehozása</a>
+    </div>
+  </div>
+  <footer class="site-footer">
+    <div class="row g-3">
+      <div class="col-md-4"><h5><i class="fas fa-graduation-cap me-2" style="color:#3B6FE8;"></i>ME-Learning</h5><p>Modern online tanulási platform.</p></div>
+      <div class="col-md-4"><h6>Linkek</h6><a href="/courses">Kurzusok</a><a href="/about">Rólunk</a></div>
+      <div class="col-md-4"><h6>Kapcsolat</h6><p><i class="fas fa-envelope me-2"></i><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a4cdcac2cbe4c1c8c1c5d6cacdcac38accd1">[email&#160;protected]</a></p></div>
+    </div>
+    <hr class="footer-divider">
+    <div class="footer-copy">&copy; 2024 ME-Learning. Minden jog fenntartva.</div>
+  </footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>

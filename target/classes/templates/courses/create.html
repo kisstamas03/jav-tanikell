@@ -1,180 +1,125 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Új kurzus - E-Learning Platform</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #2563eb; --primary-light: #3b82f6; --sidebar-bg: #0f172a; --body-bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; --muted: #64748b; }
-        * { box-sizing: border-box; }
-        body { background: var(--body-bg); font-family: 'DM Sans', sans-serif; color: var(--text); margin: 0; display: flex; min-height: 100vh; }
-        .sidebar { width: 250px; background: var(--sidebar-bg); min-height: 100vh; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 100; }
-        .sidebar-brand { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .brand-icon { width: 36px; height: 36px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0; }
-        .brand-name { font-size: 15px; font-weight: 700; color: white; line-height: 1.2; }
-        .brand-sub { font-size: 11px; color: rgba(255,255,255,0.3); }
-        .sidebar-nav { padding: 16px 12px; flex: 1; }
-        .nav-section-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 8px 8px; margin-top: 8px; }
-        .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: all 0.15s; margin-bottom: 2px; }
-        .sidebar-link i { width: 16px; text-align: center; font-size: 13px; }
-        .sidebar-link:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
-        .sidebar-link.active { background: var(--primary); color: white; }
-        .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.07); }
-        .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; }
-        .u-avatar { width: 32px; height: 32px; background: var(--primary); border-radius: 7px; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; flex-shrink: 0; }
-        .u-name { font-size: 13px; font-weight: 600; color: white; }
-        .u-role { font-size: 11px; color: rgba(255,255,255,0.35); }
-        .btn-logout { width: 100%; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); border: none; padding: 9px; border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; }
-        .btn-logout:hover { background: rgba(255,255,255,0.1); color: white; }
-        .sidebar-auth { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; gap: 8px; }
-        .main-content { margin-left: 250px; flex: 1; display: flex; flex-direction: column; }
-        .page-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 48px 40px; }
-        .page-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
-        .page-header p { margin: 0; opacity: 0.85; font-size: 14px; }
-        .content { padding: 32px 40px; flex: 1; }
-        .panel { background: white; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 20px; }
-        .panel-head { padding: 16px 20px; border-bottom: 1px solid var(--border); }
-        .panel-head h5 { margin: 0; font-weight: 700; font-size: 14px; }
-        .panel-body { padding: 20px; }
-        .site-footer { background: #0f172a; color: rgba(255,255,255,0.6); padding: 40px; margin-top: auto; }
-        .site-footer h5, .site-footer h6 { color: white; font-size: 14px; margin-bottom: 12px; }
-        .site-footer a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 13px; display: block; margin-bottom: 4px; }
-        .site-footer p { font-size: 13px; }
-        .footer-divider { border-color: rgba(255,255,255,0.08); margin: 20px 0 16px; }
-        .footer-copy { font-size: 12px; color: rgba(255,255,255,0.25); text-align: center; }
-
-        .form-card { background: white; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.07); padding: 28px; margin-bottom: 20px; }
-        .form-section-title { font-size: 13px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #e0e7ff; }
-        .file-preview { background: #f8fafc; border: 2px dashed var(--border); border-radius: 8px; padding: 16px; margin-top: 12px; }
-        .file-item { background: white; border: 1px solid var(--border); border-radius: 7px; padding: 10px 14px; margin: 6px 0; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-        .tip-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 20px; }
-        .tip-card h6 { color: var(--primary); font-weight: 700; margin-bottom: 12px; }
-        .tip-item { display: flex; gap: 10px; margin-bottom: 8px; font-size: 13px; }
-    </style>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Új kurzus – ME-Learning</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link th:href="@{/css/main.css}" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
 <aside class="sidebar">
-    <a href="/" class="sidebar-brand">
-        <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
-        <div><div class="brand-name">E-Learning</div><div class="brand-sub">Platform</div></div>
-    </a>
-    <nav class="sidebar-nav">
-        <div class="nav-section-label">Navigáció</div>
-        <a href="/" class="sidebar-link"><i class="fas fa-home"></i> Főoldal</a>
-        <a href="/courses" class="sidebar-link"><i class="fas fa-book-open"></i> Kurzusok</a>
-        <a href="/about" class="sidebar-link"><i class="fas fa-info-circle"></i> Rólunk</a>
-        <div sec:authorize="isAuthenticated()">
-            <div class="nav-section-label">Fiók</div>
-            <a href="/dashboard" class="sidebar-link"><i class="fas fa-th-large"></i> Vezérlőpult</a>
-            <a href="/my-courses" class="sidebar-link"><i class="fas fa-layer-group"></i> Kurzusaim</a>
-            <a href="/profile" class="sidebar-link"><i class="fas fa-user"></i> Profil</a>
-            <div sec:authorize="hasAnyRole('INSTRUCTOR','ADMIN')">
-                <a href="/courses/create" class="sidebar-link"><i class="fas fa-plus-circle"></i> Új kurzus</a>
-            </div>
-        </div>
-    </nav>
-    <div sec:authorize="isAuthenticated()" class="sidebar-footer">
-        <div class="sidebar-user">
-            <div class="u-avatar"><i class="fas fa-user"></i></div>
-            <div><div class="u-name" sec:authentication="name">Felhasználó</div><div class="u-role">Bejelentkezve</div></div>
-        </div>
-        <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés</button></form>
+  <a href="/" class="sidebar-brand">
+    <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+    <div><div class="brand-name">ME-Learning</div><div class="brand-sub">Platform</div></div>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Navigáció</div>
+    <a href="/" class="sl "><i class="fas fa-home"></i>Főoldal</a>
+    <a href="/courses" class="sl "><i class="fas fa-book-open"></i>Kurzusok</a>
+    <a href="/about" class="sl "><i class="fas fa-info-circle"></i>Rólunk</a>
+    <div sec:authorize="isAuthenticated()">
+      <div class="nav-label">Fiók</div>
+      <a href="/dashboard" class="sl "><i class="fas fa-th-large"></i>Vezérlőpult</a>
+      <a href="/my-courses" class="sl "><i class="fas fa-layer-group"></i>Kurzusaim</a>
+      <a href="/profile" class="sl "><i class="fas fa-user"></i>Profil</a>
+      <div sec:authorize="hasAnyRole('INSTRUCTOR','ADMIN')">
+        <a href="/courses/create" class="sl active"><i class="fas fa-plus-circle"></i>Új kurzus</a>
+      </div>
     </div>
-    <div sec:authorize="isAnonymous()" class="sidebar-auth">
-        <a href="/login" class="btn btn-outline-light btn-sm"><i class="fas fa-sign-in-alt me-2"></i>Bejelentkezés</a>
-        <a href="/register" class="btn btn-primary btn-sm"><i class="fas fa-user-plus me-2"></i>Regisztráció</a>
+  </nav>
+  <div sec:authorize="isAuthenticated()" class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="u-avatar"><i class="fas fa-user"></i></div>
+      <div><div class="u-name" sec:authentication="name">Felhasználó</div><div class="u-role">Bejelentkezve</div></div>
     </div>
+    <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés</button></form>
+  </div>
+  <div sec:authorize="isAnonymous()" class="sidebar-auth">
+    <a href="/login" class="btn-ao"><i class="fas fa-sign-in-alt me-2"></i>Bejelentkezés</a>
+    <a href="/register" class="btn-as"><i class="fas fa-user-plus me-2"></i>Regisztráció</a>
+  </div>
 </aside>
-
 <div class="main-content">
-    <div class="page-header">
-        <h1><i class="fas fa-plus me-2"></i>Új kurzus létrehozása</h1>
-        <p>Osztd meg tudásod diákokkal</p>
-    </div>
-    <div class="content">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div th:if="${success}" class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-                <div th:if="${error}"   class="alert alert-danger  alert-dismissible fade show"><i class="fas fa-exclamation-triangle me-2"></i><span th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  <div class="page-header"><div class="d-flex justify-content-between align-items-center"><div><h1><i class='fas fa-plus me-2'></i>Új kurzus létrehozása</h1><p>Osztd meg tudásod a diákokkal</p></div></div></div>
+  <div class="content">
 
-                <div class="form-card">
-                    <form th:action="@{/courses/create}" method="post" th:object="${course}" enctype="multipart/form-data">
-                        <div class="form-section-title"><i class="fas fa-info-circle me-2"></i>Alapinformációk</div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Kurzus címe *</label>
-                            <input type="text" class="form-control" th:field="*{title}" placeholder="pl. Java programozás alapjai" required maxlength="100">
-                            <small class="text-muted">Maximum 100 karakter</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Leírás *</label>
-                            <textarea class="form-control" th:field="*{description}" rows="4" placeholder="Részletes leírás a kurzusról..." required maxlength="500"></textarea>
-                            <small class="text-muted">Maximum 500 karakter</small>
-                        </div>
-                        <div class="form-check mb-4">
-                            <input type="checkbox" class="form-check-input" id="isPublic" th:field="*{isPublic}" checked>
-                            <label class="form-check-label fw-semibold" for="isPublic"><i class="fas fa-globe me-2 text-primary"></i>Publikus kurzus</label>
-                            <small class="form-text text-muted d-block ms-4">Ha nincs bejelölve, csak a hozzáadott diákok láthatják</small>
-                        </div>
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show"><i class="fas fa-exclamation-triangle me-2"></i><span th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
 
-                        <div class="form-section-title"><i class="fas fa-file-pdf me-2"></i>Prezentációk feltöltése</div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">PDF vagy PowerPoint fájlok</label>
-                            <input type="file" class="form-control" id="presentations" name="presentations" accept=".pdf,.ppt,.pptx" multiple>
-                            <small class="text-muted">Támogatott formátumok: PDF, PPT, PPTX (max. 50MB fájlonként)</small>
-                        </div>
-                        <div id="filePreview" class="file-preview" style="display:none;">
-                            <div class="small fw-semibold mb-2 text-muted">Feltöltendő fájlok:</div>
-                            <div id="fileList"></div>
-                        </div>
+        <div class="card-box">
+          <div class="card-box-head"><h5><i class="fas fa-info-circle me-2 text-primary"></i>Kurzus adatai</h5></div>
+          <div class="card-box-body">
+            <form th:action="@{/courses/create}" method="post" th:object="${course}" enctype="multipart/form-data">
+              <div class="form-section">Alapinformációk</div>
+              <div class="mb-3">
+                <label class="form-label">Kurzus címe <span style="color:#DC2626;">*</span></label>
+                <input type="text" class="form-control" th:field="*{title}" placeholder="pl. Java programozás alapjai" required maxlength="100">
+                <small style="color:var(--muted);font-size:12px;">Maximum 100 karakter</small>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Leírás <span style="color:#DC2626;">*</span></label>
+                <textarea class="form-control" th:field="*{description}" rows="4" placeholder="Részletes leírás a kurzusról…" required maxlength="500" style="resize:vertical;"></textarea>
+                <small style="color:var(--muted);font-size:12px;">Maximum 500 karakter</small>
+              </div>
+              <div class="form-check mb-4" style="background:#F8FAFF;border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+                <input type="checkbox" class="form-check-input" id="isPublic" th:field="*{isPublic}" checked>
+                <label class="form-check-label fw-semibold" for="isPublic" style="font-size:13.5px;"><i class="fas fa-globe me-2" style="color:var(--primary);"></i>Publikus kurzus</label>
+                <div style="font-size:12px;color:var(--muted);margin-top:3px;margin-left:22px;">Ha nincs bejelölve, csak a meghívott diákok láthatják</div>
+              </div>
 
-                        <div class="d-flex gap-2 justify-content-end mt-4">
-                            <a href="/courses" class="btn btn-outline-secondary"><i class="fas fa-times me-2"></i>Mégse</a>
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Kurzus létrehozása</button>
-                        </div>
-                    </form>
-                </div>
+              <div class="form-section">Prezentációk feltöltése</div>
+              <div class="mb-3">
+                <label class="form-label">PDF vagy PowerPoint fájlok</label>
+                <input type="file" class="form-control" id="presentations" name="presentations" accept=".pdf,.ppt,.pptx" multiple>
+                <small style="color:var(--muted);font-size:12px;">PDF, PPT, PPTX – max. 50 MB fájlonként</small>
+              </div>
+              <div id="filePreview" class="file-preview" style="display:none;">
+                <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">Feltöltendő fájlok:</div>
+                <div id="fileList"></div>
+              </div>
 
-                <div class="tip-card">
-                    <h6><i class="fas fa-lightbulb me-2"></i>Tippek a jó kurzushoz</h6>
-                    <div class="tip-item"><i class="fas fa-check text-success mt-1"></i><span><strong>Egyértelmű cím:</strong> Legyen deskriptív és érdekes</span></div>
-                    <div class="tip-item"><i class="fas fa-check text-success mt-1"></i><span><strong>Jó leírás:</strong> Részletes leírás, ami információt közvetít</span></div>
-                    <div class="tip-item"><i class="fas fa-check text-success mt-1"></i><span><strong>Prezentációk:</strong> Tölts fel logikus sorrendben PDF-eket</span></div>
-                </div>
-            </div>
+              <div class="d-flex gap-2 justify-content-end mt-4">
+                <a href="/courses" class="btn btn-sm btn-outline-secondary"><i class="fas fa-times me-2"></i>Mégse</a>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-2"></i>Kurzus létrehozása</button>
+              </div>
+            </form>
+          </div>
         </div>
-    </div>
 
-    <footer class="site-footer">
-        <div class="row">
-            <div class="col-md-4 mb-3"><h5><i class="fas fa-graduation-cap me-2"></i>E-Learning Platform</h5><p>Modern online tanulási platform mindenkinek.</p></div>
-            <div class="col-md-4 mb-3"><h6>Gyors linkek</h6><a href="/courses">Kurzusok</a><a href="/about">Rólunk</a></div>
-            <div class="col-md-4 mb-3"><h6>Kapcsolat</h6><p><i class="fas fa-envelope me-2"></i>info@elearning.hu</p></div>
+        <div class="tip-box">
+          <h6><i class="fas fa-lightbulb me-2"></i>Tippek a jó kurzushoz</h6>
+          <div class="tip-item"><i class="fas fa-check" style="color:#16A34A;margin-top:2px;"></i><span><strong>Egyértelmű cím:</strong> Legyen deskriptív és érdekes</span></div>
+          <div class="tip-item"><i class="fas fa-check" style="color:#16A34A;margin-top:2px;"></i><span><strong>Jó leírás:</strong> Részletes leírás, ami meggyőzi a diákokat</span></div>
+          <div class="tip-item"><i class="fas fa-check" style="color:#16A34A;margin-top:2px;"></i><span><strong>Prezentációk:</strong> Tölts fel logikus sorrendben PDF/PPT fájlokat</span></div>
         </div>
-        <hr class="footer-divider">
-        <div class="footer-copy">&copy; 2024 E-Learning Platform. Minden jog fenntartva.</div>
-    </footer>
-
+      </div>
+    </div>
+  </div>
+  <footer class="site-footer">
+    <div class="row g-3">
+      <div class="col-md-4"><h5><i class="fas fa-graduation-cap me-2" style="color:#3B6FE8;"></i>ME-Learning</h5><p>Modern online tanulási platform.</p></div>
+      <div class="col-md-4"><h6>Linkek</h6><a href="/courses">Kurzusok</a><a href="/about">Rólunk</a></div>
+      <div class="col-md-4"><h6>Kapcsolat</h6><p><i class="fas fa-envelope me-2"></i><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c7aea9a1a887a2aba2a6b5a9aea9a0e9afb2">[email&#160;protected]</a></p></div>
+    </div>
+    <hr class="footer-divider">
+    <div class="footer-copy">&copy; 2024 ME-Learning. Minden jog fenntartva.</div>
+  </footer>
 </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<script>
-    const fi = document.getElementById('presentations');
-    fi.addEventListener('change', function() {
-        const fp = document.getElementById('filePreview');
-        const fl = document.getElementById('fileList');
-        fl.innerHTML = '';
-        if (this.files.length > 0) {
-            fp.style.display = 'block';
-            for (let f of this.files) {
-                const d = document.createElement('div');
-                d.className = 'file-item';
-                d.innerHTML = `<span><i class="fas fa-file-pdf text-danger me-2"></i><strong>${f.name}</strong> <small class="text-muted">${(f.size/1024/1024).toFixed(2)} MB</small></span><i class="fas fa-check text-success"></i>`;
-                fl.appendChild(d);
-            }
-        } else { fp.style.display = 'none'; }
-    });
-</script>
-</body>
-</html>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+const fi = document.getElementById('presentations');
+if(fi) fi.addEventListener('change', function() {
+  const fp=document.getElementById('filePreview'), fl=document.getElementById('fileList');
+  fl.innerHTML='';
+  if(this.files.length>0){
+    fp.style.display='block';
+    for(let f of this.files){
+      const d=document.createElement('div');
+      d.className='file-item';
+      d.innerHTML='<span><i class="fas fa-file-pdf" style="color:#DC2626;margin-right:8px;"></i><strong>'+f.name+'</strong> <small style="color:#9CA3AF;">'+(f.size/1024/1024).toFixed(2)+' MB</small></span><i class="fas fa-check" style="color:#16A34A;"></i>';
+      fl.appendChild(d);
+    }
+  } else { fp.style.display='

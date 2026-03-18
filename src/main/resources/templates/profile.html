@@ -1,182 +1,127 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil - E-Learning Platform</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #2563eb; --primary-light: #3b82f6; --sidebar-bg: #0f172a; --body-bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; --muted: #64748b; }
-        * { box-sizing: border-box; }
-        body { background: var(--body-bg); font-family: 'DM Sans', sans-serif; color: var(--text); margin: 0; display: flex; min-height: 100vh; }
-        .sidebar { width: 250px; background: var(--sidebar-bg); min-height: 100vh; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 100; }
-        .sidebar-brand { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .brand-icon { width: 36px; height: 36px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0; }
-        .brand-name { font-size: 15px; font-weight: 700; color: white; line-height: 1.2; }
-        .brand-sub { font-size: 11px; color: rgba(255,255,255,0.3); }
-        .sidebar-nav { padding: 16px 12px; flex: 1; }
-        .nav-section-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 8px 8px; margin-top: 8px; }
-        .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: all 0.15s; margin-bottom: 2px; }
-        .sidebar-link i { width: 16px; text-align: center; font-size: 13px; }
-        .sidebar-link:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
-        .sidebar-link.active { background: var(--primary); color: white; }
-        .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.07); }
-        .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; }
-        .u-avatar { width: 32px; height: 32px; background: var(--primary); border-radius: 7px; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; flex-shrink: 0; }
-        .u-name { font-size: 13px; font-weight: 600; color: white; }
-        .u-role { font-size: 11px; color: rgba(255,255,255,0.35); }
-        .btn-logout { width: 100%; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); border: none; padding: 9px; border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; }
-        .btn-logout:hover { background: rgba(255,255,255,0.1); color: white; }
-        .sidebar-auth { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; gap: 8px; }
-        .main-content { margin-left: 250px; flex: 1; display: flex; flex-direction: column; }
-        .page-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 48px 40px; }
-        .page-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
-        .page-header p { margin: 0; opacity: 0.85; font-size: 14px; }
-        .content { padding: 32px 40px; flex: 1; }
-        .panel { background: white; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 20px; }
-        .panel-head { padding: 16px 20px; border-bottom: 1px solid var(--border); }
-        .panel-head h5 { margin: 0; font-weight: 700; font-size: 14px; }
-        .panel-body { padding: 20px; }
-        .site-footer { background: #0f172a; color: rgba(255,255,255,0.6); padding: 40px; margin-top: auto; }
-        .site-footer h5, .site-footer h6 { color: white; font-size: 14px; margin-bottom: 12px; }
-        .site-footer a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 13px; display: block; margin-bottom: 4px; }
-        .site-footer p { font-size: 13px; }
-        .footer-divider { border-color: rgba(255,255,255,0.08); margin: 20px 0 16px; }
-        .footer-copy { font-size: 12px; color: rgba(255,255,255,0.25); text-align: center; }
-
-        .avatar-circle { width: 90px; height: 90px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white; margin: 0 auto 16px; }
-        .stat-box { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 18px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
-        .stat-box i { font-size: 22px; color: var(--primary); margin-bottom: 8px; display: block; }
-        .stat-box .s-num { font-size: 24px; font-weight: 700; color: var(--primary); }
-        .stat-box .s-lbl { font-size: 12px; color: var(--muted); }
-    </style>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil – ME-Learning</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link th:href="@{/css/main.css}" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
 <aside class="sidebar">
-    <a href="/" class="sidebar-brand">
-        <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
-        <div><div class="brand-name">E-Learning</div><div class="brand-sub">Platform</div></div>
-    </a>
-    <nav class="sidebar-nav">
-        <div class="nav-section-label">Navigáció</div>
-        <a href="/" class="sidebar-link"><i class="fas fa-home"></i> Főoldal</a>
-        <a href="/courses" class="sidebar-link"><i class="fas fa-book-open"></i> Kurzusok</a>
-        <a href="/about" class="sidebar-link"><i class="fas fa-info-circle"></i> Rólunk</a>
-        <div sec:authorize="isAuthenticated()">
-            <div class="nav-section-label">Fiók</div>
-            <a href="/dashboard" class="sidebar-link"><i class="fas fa-th-large"></i> Vezérlőpult</a>
-            <a href="/my-courses" class="sidebar-link"><i class="fas fa-layer-group"></i> Kurzusaim</a>
-            <a href="/profile" class="sidebar-link"><i class="fas fa-user"></i> Profil</a>
-            <div sec:authorize="hasAnyRole('INSTRUCTOR','ADMIN')">
-                <a href="/courses/create" class="sidebar-link"><i class="fas fa-plus-circle"></i> Új kurzus</a>
-            </div>
-        </div>
-    </nav>
-    <div sec:authorize="isAuthenticated()" class="sidebar-footer">
-        <div class="sidebar-user">
-            <div class="u-avatar"><i class="fas fa-user"></i></div>
-            <div><div class="u-name" sec:authentication="name">Felhasználó</div><div class="u-role">Bejelentkezve</div></div>
-        </div>
-        <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés</button></form>
+  <a href="/" class="sidebar-brand">
+    <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+    <div><div class="brand-name">ME-Learning</div><div class="brand-sub">Platform</div></div>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Navigáció</div>
+    <a href="/" class="sl "><i class="fas fa-home"></i>Főoldal</a>
+    <a href="/courses" class="sl "><i class="fas fa-book-open"></i>Kurzusok</a>
+    <a href="/about" class="sl "><i class="fas fa-info-circle"></i>Rólunk</a>
+    <div sec:authorize="isAuthenticated()">
+      <div class="nav-label">Fiók</div>
+      <a href="/dashboard" class="sl "><i class="fas fa-th-large"></i>Vezérlőpult</a>
+      <a href="/my-courses" class="sl "><i class="fas fa-layer-group"></i>Kurzusaim</a>
+      <a href="/profile" class="sl active"><i class="fas fa-user"></i>Profil</a>
+      <div sec:authorize="hasAnyRole('INSTRUCTOR','ADMIN')">
+        <a href="/courses/create" class="sl "><i class="fas fa-plus-circle"></i>Új kurzus</a>
+      </div>
     </div>
-    <div sec:authorize="isAnonymous()" class="sidebar-auth">
-        <a href="/login" class="btn btn-outline-light btn-sm"><i class="fas fa-sign-in-alt me-2"></i>Bejelentkezés</a>
-        <a href="/register" class="btn btn-primary btn-sm"><i class="fas fa-user-plus me-2"></i>Regisztráció</a>
+  </nav>
+  <div sec:authorize="isAuthenticated()" class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="u-avatar"><i class="fas fa-user"></i></div>
+      <div><div class="u-name" sec:authentication="name">Felhasználó</div><div class="u-role">Bejelentkezve</div></div>
     </div>
+    <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés</button></form>
+  </div>
+  <div sec:authorize="isAnonymous()" class="sidebar-auth">
+    <a href="/login" class="btn-ao"><i class="fas fa-sign-in-alt me-2"></i>Bejelentkezés</a>
+    <a href="/register" class="btn-as"><i class="fas fa-user-plus me-2"></i>Regisztráció</a>
+  </div>
 </aside>
-
 <div class="main-content">
-    <div class="page-header">
-        <h1><i class="fas fa-user me-2"></i>Profil</h1>
-        <p>Kezeld fiókodat és nézd meg előrehaladásodat</p>
-    </div>
-    <div class="content">
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="panel panel-body text-center">
-                    <div class="avatar-circle"><i class="fas fa-user"></i></div>
-                    <h5 class="fw-bold mb-1" sec:authentication="name">Felhasználónév</h5>
-                    <p class="text-muted small mb-3" th:text="${user?.email}">email</p>
-                    <span class="badge bg-primary py-2 px-3">
-                        <i class="fas fa-user-graduate me-1"></i>
-                        <span th:text="${user?.role?.name()}">Szerepkör</span>
-                    </span>
-                    <div class="d-grid gap-2 mt-4">
-                        <a href="/dashboard" class="btn btn-primary btn-sm"><i class="fas fa-th-large me-2"></i>Vezérlőpultom</a>
-                    </div>
-                </div>
+  <div class="page-header"><div class="d-flex justify-content-between align-items-center"><div><h1><i class='fas fa-user me-2'></i>Profil</h1><p>Kezeld fiókodat</p></div></div></div>
+  <div class="content">
 
-                <div class="panel mt-3">
-                    <div class="panel-head"><h5><i class="fas fa-info-circle me-2 text-primary"></i>Információk</h5></div>
-                    <div class="panel-body">
-                        <div class="small text-muted mb-1">Teljes név</div>
-                        <div class="fw-semibold mb-3" th:text="|${user?.firstName} ${user?.lastName}|">Név</div>
-                        <div class="small text-muted mb-1">Csatlakozás</div>
-                        <div class="fw-semibold mb-3" th:text="${#temporals.format(user?.createdAt,'yyyy.MM.dd.')}">dátum</div>
-                        <div class="small text-muted mb-1">Email állapot</div>
-                        <span class="badge bg-success"><i class="fas fa-check me-1"></i>Megerősítve</span>
-                    </div>
-                </div>
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="card-box card-box-body text-center" style="padding:28px;">
+          <div style="width:80px;height:80px;background:linear-gradient(135deg,var(--primary),#6B9EF8);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;margin:0 auto 14px;"><i class="fas fa-user"></i></div>
+          <div style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;margin-bottom:2px;" sec:authentication="name">Felhasználó</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:12px;" th:text="${user?.email}">email</div>
+          <span class="badge" style="background:#EEF4FF;color:#3B6FE8;font-size:11px;padding:5px 12px;" th:text="${user?.role?.name()}">STUDENT</span>
+          <hr style="margin:18px 0;border-color:var(--border);">
+          <div style="text-align:left;font-size:13px;">
+            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--border);">
+              <span style="color:var(--muted);">Teljes név</span>
+              <span style="font-weight:600;" th:text="|${user?.firstName} ${user?.lastName}|">Név</span>
             </div>
-
-            <div class="col-lg-8">
-                <div class="row g-3 mb-4">
-                    <div class="col-4"><div class="stat-box"><i class="fas fa-book"></i><div class="s-num">–</div><div class="s-lbl">Beiratkozott kurzus</div></div></div>
-                    <div class="col-4"><div class="stat-box"><i class="fas fa-trophy"></i><div class="s-num">–</div><div class="s-lbl">Befejezett</div></div></div>
-                    <div class="col-4"><div class="stat-box"><i class="fas fa-certificate"></i><div class="s-num">–</div><div class="s-lbl">Tanúsítvány</div></div></div>
-                </div>
-
-                <div class="panel">
-                    <div class="panel-head"><h5><i class="fas fa-cog me-2 text-primary"></i>Fiók beállítások</h5></div>
-                    <div class="panel-body">
-                        <form>
-                            <div class="row mb-3">
-                                <div class="col-md-6"><label class="form-label fw-semibold">Keresztnév</label><input type="text" class="form-control" th:value="${user?.firstName}"></div>
-                                <div class="col-md-6"><label class="form-label fw-semibold">Vezetéknév</label><input type="text" class="form-control" th:value="${user?.lastName}"></div>
-                            </div>
-                            <div class="mb-3"><label class="form-label fw-semibold">Email cím</label><input type="email" class="form-control" th:value="${user?.email}"></div>
-                            <div class="mb-3"><label class="form-label fw-semibold">Felhasználónév</label><input type="text" class="form-control" th:value="${user?.username}" disabled><small class="text-muted">A felhasználónév nem módosítható</small></div>
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Mentés</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <div class="panel-head"><h5><i class="fas fa-lock me-2 text-primary"></i>Jelszó módosítása</h5></div>
-                    <div class="panel-body">
-                        <form>
-                            <div class="mb-3"><label class="form-label fw-semibold">Jelenlegi jelszó</label><input type="password" class="form-control"></div>
-                            <div class="mb-3"><label class="form-label fw-semibold">Új jelszó</label><input type="password" class="form-control"></div>
-                            <div class="mb-3"><label class="form-label fw-semibold">Megerősítés</label><input type="password" class="form-control"></div>
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-key me-2"></i>Jelszó frissítése</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="panel border-danger">
-                    <div class="panel-head"><h5 class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Veszélyzóna</h5></div>
-                    <div class="panel-body">
-                        <p class="text-muted small mb-3">A fiók törlése végleges és visszafordíthatatlan művelet.</p>
-                        <button class="btn btn-outline-danger btn-sm"><i class="fas fa-trash me-2"></i>Fiók törlése</button>
-                    </div>
-                </div>
+            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--border);">
+              <span style="color:var(--muted);">Csatlakozás</span>
+              <span style="font-weight:600;" th:text="${#temporals.format(user?.createdAt,'yyyy.MM.dd.')}">dátum</span>
             </div>
+            <div class="d-flex justify-content-between py-2">
+              <span style="color:var(--muted);">Email állapot</span>
+              <span class="badge" style="background:#F0FDF4;color:#16A34A;font-size:11px;"><i class="fas fa-check me-1"></i>Aktív</span>
+            </div>
+          </div>
+          <a href="/dashboard" class="btn btn-primary btn-sm w-100 mt-3"><i class="fas fa-th-large me-2"></i>Vezérlőpult</a>
         </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="row g-3 mb-4">
+          <div class="col-4"><div class="stat-card"><div class="stat-icon" style="background:#EEF4FF;"><i class="fas fa-book" style="color:#3B6FE8;"></i></div><div><div class="stat-val">–</div><div class="stat-lbl">Beiratkozott</div></div></div></div>
+          <div class="col-4"><div class="stat-card"><div class="stat-icon" style="background:#F0FDF4;"><i class="fas fa-trophy" style="color:#16A34A;"></i></div><div><div class="stat-val">–</div><div class="stat-lbl">Befejezett</div></div></div></div>
+          <div class="col-4"><div class="stat-card"><div class="stat-icon" style="background:#FFF7ED;"><i class="fas fa-certificate" style="color:#D97706;"></i></div><div><div class="stat-val">–</div><div class="stat-lbl">Tanúsítvány</div></div></div></div>
+        </div>
+        <div class="card-box">
+          <div class="card-box-head"><h5><i class="fas fa-cog me-2 text-primary"></i>Fiók beállítások</h5></div>
+          <div class="card-box-body">
+            <form>
+              <div class="row g-3 mb-3">
+                <div class="col-6"><label class="form-label">Keresztnév</label><input type="text" class="form-control" th:value="${user?.firstName}"></div>
+                <div class="col-6"><label class="form-label">Vezetéknév</label><input type="text" class="form-control" th:value="${user?.lastName}"></div>
+              </div>
+              <div class="mb-3"><label class="form-label">Email cím</label><input type="email" class="form-control" th:value="${user?.email}"></div>
+              <div class="mb-3"><label class="form-label">Felhasználónév</label><input type="text" class="form-control" th:value="${user?.username}" disabled><small style="color:var(--muted);font-size:12px;">A felhasználónév nem módosítható</small></div>
+              <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-2"></i>Mentés</button>
+            </form>
+          </div>
+        </div>
+        <div class="card-box">
+          <div class="card-box-head"><h5><i class="fas fa-lock me-2 text-primary"></i>Jelszó módosítása</h5></div>
+          <div class="card-box-body">
+            <form>
+              <div class="mb-3"><label class="form-label">Jelenlegi jelszó</label><input type="password" class="form-control"></div>
+              <div class="mb-3"><label class="form-label">Új jelszó</label><input type="password" class="form-control"></div>
+              <div class="mb-3"><label class="form-label">Megerősítés</label><input type="password" class="form-control"></div>
+              <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-key me-2"></i>Jelszó frissítése</button>
+            </form>
+          </div>
+        </div>
+        <div class="card-box" style="border-color:#FECDD3;">
+          <div class="card-box-head" style="background:#FFF1F2;"><h5 style="color:#9F1239;"><i class="fas fa-exclamation-triangle me-2"></i>Veszélyzóna</h5></div>
+          <div class="card-box-body">
+            <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">A fiók törlése végleges és visszafordíthatatlan művelet.</p>
+            <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash me-2"></i>Fiók törlése</button>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <footer class="site-footer">
-        <div class="row">
-            <div class="col-md-4 mb-3"><h5><i class="fas fa-graduation-cap me-2"></i>E-Learning Platform</h5><p>Modern online tanulási platform mindenkinek.</p></div>
-            <div class="col-md-4 mb-3"><h6>Gyors linkek</h6><a href="/courses">Kurzusok</a><a href="/about">Rólunk</a></div>
-            <div class="col-md-4 mb-3"><h6>Kapcsolat</h6><p><i class="fas fa-envelope me-2"></i>info@elearning.hu</p></div>
-        </div>
-        <hr class="footer-divider">
-        <div class="footer-copy">&copy; 2024 E-Learning Platform. Minden jog fenntartva.</div>
-    </footer>
-
+  </div>
+  <footer class="site-footer">
+    <div class="row g-3">
+      <div class="col-md-4"><h5><i class="fas fa-graduation-cap me-2" style="color:#3B6FE8;"></i>ME-Learning</h5><p>Modern online tanulási platform.</p></div>
+      <div class="col-md-4"><h6>Linkek</h6><a href="/courses">Kurzusok</a><a href="/about">Rólunk</a></div>
+      <div class="col-md-4"><h6>Kapcsolat</h6><p><i class="fas fa-envelope me-2"></i><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="721b1c141d32171e1713001c1b1c155c1a07">[email&#160;protected]</a></p></div>
+    </div>
+    <hr class="footer-divider">
+    <div class="footer-copy">&copy; 2024 ME-Learning. Minden jog fenntartva.</div>
+  </footer>
 </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

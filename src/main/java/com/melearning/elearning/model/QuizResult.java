@@ -22,6 +22,7 @@ public class QuizResult {
     private int score;
     private int totalQuestions;
     private int percentage;
+    private int grade;   // 1–5 érdemjegy
     private LocalDateTime completedAt;
 
     public QuizResult() {
@@ -46,6 +47,9 @@ public class QuizResult {
 
     public int getPercentage() { return percentage; }
     public void setPercentage(int percentage) { this.percentage = percentage; }
+
+    public int getGrade() { return grade; }
+    public void setGrade(int grade) { this.grade = grade; }
 
     public LocalDateTime getCompletedAt() { return completedAt; }
     public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }

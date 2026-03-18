@@ -1,78 +1,237 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teszt kitöltése - E-Learning Platform</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teszt kitöltése – EduFlow</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* Alap stílusok (ugyanaz, mint eddig) */
-    :root { --primary: #2563eb; --primary-light: #3b82f6; --body-bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; }
-    body { background: var(--body-bg); font-family: 'DM Sans', sans-serif; color: var(--text); }
-    .page-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 40px 0; text-align: center; }
-    .page-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 5px; }
-    .page-header p { margin: 0; opacity: 0.85; font-size: 15px; }
+    :root { --primary:#3B6FE8; --primary-dark:#2952C8; --border:#E5E9F2; --text:#111827; --text-2:#4B5563; --muted:#9CA3AF; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #F0F4FF; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
 
-    .quiz-container { max-width: 800px; margin: -30px auto 50px; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 40px; position: relative; z-index: 10; border: 1px solid var(--border); }
-    .question-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 25px; margin-bottom: 25px; }
-    .question-text { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #0f172a; }
+    /* ── TOP BAR ── */
+    .quiz-topbar {
+      background: linear-gradient(135deg, #0D1321, #1B2A4A);
+      color: #fff;
+      position: sticky; top: 0; z-index: 50;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .quiz-topbar-inner {
+      max-width: 860px; margin: 0 auto;
+      padding: 14px 24px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .quiz-brand { display: flex; align-items: center; gap: 10px; }
+    .quiz-brand .brand-dot {
+      width: 32px; height: 32px; background: var(--primary); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
+    }
+    .quiz-title { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 16px; color: #fff; }
+    .quiz-course-name { font-size: 12px; color: rgba(255,255,255,.45); margin-top: 1px; }
+    .quiz-progress-wrap { display: flex; align-items: center; gap: 10px; }
+    .quiz-progress-bar { width: 120px; height: 6px; background: rgba(255,255,255,.15); border-radius: 3px; overflow: hidden; }
+    .quiz-progress-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width .3s; }
+    .quiz-progress-text { font-size: 12px; color: rgba(255,255,255,.45); white-space: nowrap; }
 
-    /* Rádiógombok stílusozása */
-    .option-label { display: block; padding: 12px 15px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; background: white; }
-    .option-label:hover { border-color: var(--primary-light); background: #eff6ff; }
-    .option-label input[type="radio"] { margin-right: 10px; transform: scale(1.2); }
-    /* Ha a rádiógomb ki van választva, stílusozzuk a szülőt (labelt) */
-    .option-label:has(input[type="radio"]:checked) { border-color: var(--primary); background: #eff6ff; font-weight: 600; }
+    /* ── MAIN CONTAINER ── */
+    .quiz-container { max-width: 860px; margin: 0 auto; padding: 28px 24px 100px; flex: 1; width: 100%; }
 
-    .quiz-footer { border-top: 1px solid var(--border); padding-top: 25px; display: flex; justify-content: space-between; align-items: center; }
+    /* ── QUESTION CARD ── */
+    .q-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+    .q-num {
+      font-size: 11px; font-weight: 700; color: var(--primary);
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;
+    }
+    .q-text {
+      font-family: 'Outfit', sans-serif; font-weight: 700;
+      font-size: 17px; color: var(--text); margin-bottom: 20px; line-height: 1.4;
+    }
+
+    /* ── OPTIONS ── */
+    .option-label {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 11px; margin-bottom: 9px;
+      cursor: pointer; transition: all .15s; background: #fff;
+      user-select: none;
+    }
+    .option-label:hover { border-color: #93C5FD; background: #F0F7FF; }
+    .option-label.selected { border-color: var(--primary); background: #EEF4FF; }
+    .option-label.selected .opt-letter { background: var(--primary); color: #fff; }
+    .option-label input[type="radio"] { display: none; }
+    .opt-letter {
+      width: 32px; height: 32px;
+      background: #F1F5F9; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 13px; color: #64748B;
+      flex-shrink: 0; transition: all .15s;
+    }
+    .opt-text { font-size: 14px; font-weight: 500; }
+
+    /* ── SUBMIT BAR ── */
+    .submit-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+      background: #fff;
+      border-top: 1px solid var(--border);
+      padding: 14px 24px;
+      box-shadow: 0 -4px 16px rgba(0,0,0,.06);
+    }
+    .submit-bar-inner {
+      max-width: 860px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .answered-count { font-size: 13px; color: var(--muted); }
+    .answered-count strong { color: var(--text); font-weight: 700; }
+
+    /* ── BUTTONS ── */
+    .btn-back {
+      background: #F1F5F9; color: #374151; border: none;
+      padding: 10px 20px; border-radius: 10px; font-size: 14px;
+      font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
+      transition: all .15s;
+    }
+    .btn-back:hover { background: #E2E8F0; color: #111827; }
+    .btn-submit {
+      background: var(--primary); color: #fff; border: none;
+      padding: 11px 28px; border-radius: 10px; font-size: 14px;
+      font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+      transition: all .2s; box-shadow: 0 4px 14px rgba(59,111,232,.3);
+    }
+    .btn-submit:hover { background: var(--primary-dark); transform: translateY(-1px); }
   </style>
 </head>
 <body>
 
-<div class="page-header">
-  <div class="container">
-    <h1><i class="fas fa-pen-fancy me-2"></i><span th:text="${quiz.title}">Teszt címe</span></h1>
-    <p th:text="${course.title}">Kurzus címe</p>
+<!-- TOP BAR -->
+<div class="quiz-topbar">
+  <div class="quiz-topbar-inner">
+    <div class="quiz-brand">
+      <div class="brand-dot"><i class="fas fa-tasks"></i></div>
+      <div>
+        <div class="quiz-title" th:text="${quiz.title}">Teszt neve</div>
+        <div class="quiz-course-name" th:text="${course.title}">Kurzus neve</div>
+      </div>
+    </div>
+    <div class="quiz-progress-wrap">
+      <div class="quiz-progress-bar">
+        <div class="quiz-progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <span class="quiz-progress-text">
+        <span id="answeredCount">0</span> / <span th:text="${questions.size()}">0</span> megválaszolva
+      </span>
+    </div>
   </div>
 </div>
 
-<div class="container">
-  <div class="quiz-container">
-    <form th:action="@{/courses/{courseId}/quizzes/{quizId}/submit(courseId=${course.id}, quizId=${quiz.id})}" method="post">
+<!-- KÉRDÉSEK -->
+<div class="quiz-container">
+  <form id="quizForm"
+        th:action="@{/courses/{cId}/quizzes/{qId}/submit(cId=${course.id},qId=${quiz.id})}"
+        method="post">
 
-      <div th:each="q, iterStat : ${quiz.questions}" class="question-card">
-        <div class="question-text" th:text="${iterStat.count} + '. ' + ${q.text}">1. Kérdés szövege</div>
+    <div th:each="q, iter : ${questions}"
+         class="q-card"
+         th:id="'q-' + ${iter.count}">
 
-        <label class="option-label">
-          <input type="radio" th:name="'question_' + ${q.id}" value="A" required>
-          <span class="fw-bold me-2">A)</span> <span th:text="${q.optionA}">Opció A</span>
-        </label>
+      <div class="q-num"
+           th:text="'Kérdés ' + ${iter.count} + ' / ' + ${questions.size()}">1 / 10</div>
+      <div class="q-text" th:text="${q.text}">Kérdés szövege</div>
 
-        <label class="option-label">
-          <input type="radio" th:name="'question_' + ${q.id}" value="B" required>
-          <span class="fw-bold me-2">B)</span> <span th:text="${q.optionB}">Opció B</span>
-        </label>
+      <label class="option-label" onclick="markAnswered(this)">
+        <input type="radio" th:name="'question_' + ${q.id}" value="A" required>
+        <div class="opt-letter">A</div>
+        <span class="opt-text" th:text="${q.optionA}">Opció A</span>
+      </label>
+      <label class="option-label" onclick="markAnswered(this)">
+        <input type="radio" th:name="'question_' + ${q.id}" value="B">
+        <div class="opt-letter">B</div>
+        <span class="opt-text" th:text="${q.optionB}">Opció B</span>
+      </label>
+      <label class="option-label" onclick="markAnswered(this)">
+        <input type="radio" th:name="'question_' + ${q.id}" value="C">
+        <div class="opt-letter">C</div>
+        <span class="opt-text" th:text="${q.optionC}">Opció C</span>
+      </label>
+      <label class="option-label" onclick="markAnswered(this)">
+        <input type="radio" th:name="'question_' + ${q.id}" value="D">
+        <div class="opt-letter">D</div>
+        <span class="opt-text" th:text="${q.optionD}">Opció D</span>
+      </label>
+    </div>
 
-        <label class="option-label">
-          <input type="radio" th:name="'question_' + ${q.id}" value="C" required>
-          <span class="fw-bold me-2">C)</span> <span th:text="${q.optionC}">Opció C</span>
-        </label>
+  </form>
+</div>
 
-        <label class="option-label">
-          <input type="radio" th:name="'question_' + ${q.id}" value="D" required>
-          <span class="fw-bold me-2">D)</span> <span th:text="${q.optionD}">Opció D</span>
-        </label>
-      </div>
-
-      <div class="quiz-footer">
-        <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Vissza a kurzushoz</a>
-        <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-paper-plane me-2"></i>Válaszok beküldése</button>
-      </div>
-
-    </form>
+<!-- SUBMIT BAR -->
+<div class="submit-bar">
+  <div class="submit-bar-inner">
+    <a th:href="@{/courses/{id}(id=${course.id})}" class="btn-back">
+      <i class="fas fa-arrow-left"></i>Vissza
+    </a>
+    <div class="answered-count">
+      <strong id="answeredCount2">0</strong> / <span th:text="${questions.size()}">0</span> megválaszolva
+    </div>
+    <button type="submit" form="quizForm" class="btn-submit">
+      <i class="fas fa-paper-plane"></i>Válaszok beküldése
+    </button>
   </div>
 </div>
 
+<script>
+  var total = document.querySelectorAll('.q-card').length;
+  var answered = new Set();
+
+  function markAnswered(label) {
+    // Mark the card as answered
+    var card = label.closest('.q-card');
+    var cardId = parseInt(card.id.replace('q-', ''));
+    answered.add(cardId);
+
+    // Visual feedback - deselect others in same card, select clicked
+    card.querySelectorAll('.option-label').forEach(function(l) {
+      l.classList.remove('selected');
+    });
+    label.classList.add('selected');
+
+    updateProgress();
+  }
+
+  function updateProgress() {
+    var count = answered.size;
+    var pct = total > 0 ? (count / total * 100) : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('answeredCount').textContent = count;
+    document.getElementById('answeredCount2').textContent = count;
+  }
+
+  // Also listen for actual radio change events (keyboard navigation)
+  document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      var label = this.closest('.option-label');
+      if (label) markAnswered(label);
+    });
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.ctrlKey) {
+      document.getElementById('quizForm').submit();
+    }
+  });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

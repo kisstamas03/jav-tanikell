@@ -7,12 +7,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface QuizResultRepository extends JpaRepository<QuizResult, Long> {
-    // Ezzel később le tudod kérdezni egy diák összes eredményét:
+
     List<QuizResult> findByUser(User user);
 
-    // Ezzel pedig egy adott kvíz összes kitöltését (pl. az oktatónak):
     List<QuizResult> findByQuiz(Quiz quiz);
+
+    // Egy adott user kitöltötte-e már ezt a kvízt?
+    boolean existsByUserAndQuiz(User user, Quiz quiz);
+
+    // Legutóbbi eredmény user+quiz kombinációra
+    Optional<QuizResult> findTopByUserAndQuizOrderByCompletedAtDesc(User user, Quiz quiz);
 }

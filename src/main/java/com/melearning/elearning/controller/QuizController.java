@@ -18,61 +18,157 @@ import java.util.Optional;
 @RequestMapping("/courses/{courseId}/quizzes")
 public class QuizController {
 
-    @Autowired
-    private CourseService courseService;
+    @Autowired private CourseService courseService;
+    @Autowired private QuizService quizService;
+    @Autowired private UserService userService;
+    @Autowired private com.melearning.elearning.repository.QuizResultRepository quizResultRepository;
+    @Autowired private com.melearning.elearning.repository.QuestionRepository questionRepository;
 
-    @Autowired
-    private QuizService quizService;
+    // ── Kvíz létrehozó oldal ──────────────────────────────────────────────
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private com.melearning.elearning.repository.QuizResultRepository quizResultRepository;
-
-    @Autowired
-    private com.melearning.elearning.repository.QuestionRepository questionRepository;
-
-    // Megjeleníti a kvíz-készítő űrlapot
     @GetMapping("/create")
     public String createQuizForm(@PathVariable Long courseId, Model model, Authentication auth) {
         Optional<Course> courseOpt = courseService.getCourseById(courseId);
-
-        if (courseOpt.isEmpty()) {
-            return "redirect:/courses";
-        }
-
-        // Itt is ellenőrizhetnéd, hogy az adott felhasználó-e az oktató, ahogy a CourseControllerben tetted!
-
+        if (courseOpt.isEmpty()) return "redirect:/courses";
         model.addAttribute("course", courseOpt.get());
-        model.addAttribute("quiz", new Quiz()); // Egy üres kvízt küldünk a formnak
-
-        return "courses/create-quiz"; // Ezt a HTML-t fogjuk mindjárt megírni
+        model.addAttribute("quiz", new Quiz());
+        return "courses/create-quiz";
     }
 
-    // Megjeleníti a tesztkitöltő oldalt a diáknak
-    @GetMapping("/{quizId}/take")
-    public String takeQuiz(@PathVariable Long courseId, @PathVariable Long quizId, Model model, Authentication auth) {
+    @PostMapping("/create")
+    public String saveQuiz(@PathVariable Long courseId,
+                           @ModelAttribute Quiz quiz,
+                           Authentication auth,
+                           RedirectAttributes redirectAttributes) {
         Optional<Course> courseOpt = courseService.getCourseById(courseId);
-        Optional<Quiz> quizOpt = quizService.getQuizById(quizId);
-
-        if (courseOpt.isPresent() && quizOpt.isPresent()) {
-            Quiz quiz = quizOpt.get();
-
-            // KÜLÖN lekérdezzük a kérdéseket az adatbázisból, így garantáltan nem lesz üres!
-            List<Question> questions = questionRepository.findByQuiz(quiz);
-
-            model.addAttribute("course", courseOpt.get());
-            model.addAttribute("quiz", quiz);
-            model.addAttribute("questions", questions); // Átadjuk a listát a HTML-nek
-
-            return "courses/take-quiz";
+        if (courseOpt.isPresent()) {
+            quiz.setCourse(courseOpt.get());
+            // Ha a checkbox nincs bejelölve, null-t küld a form → false-ra állítjuk
+            if (quiz.getAllowMultipleAttempts() == null) {
+                quiz.setAllowMultipleAttempts(false);
+            }
+            quizService.saveQuiz(quiz);
+            redirectAttributes.addFlashAttribute("success", "Kérdéssor sikeresen hozzáadva a kurzushoz!");
+            return "redirect:/courses/" + courseId + "/manage";
         }
-
+        redirectAttributes.addFlashAttribute("error", "Hiba történt a kérdéssor mentésekor.");
         return "redirect:/courses";
     }
 
-    // Fogadja a diák válaszait, kiértékeli, és megmutatja az eredményt
+    // ── Ponthatárok szerkesztése ──────────────────────────────────────────
+
+    @GetMapping("/{quizId}/thresholds")
+    public String editThresholds(@PathVariable Long courseId,
+                                 @PathVariable Long quizId,
+                                 Model model, Authentication auth) {
+        Optional<Course> courseOpt = courseService.getCourseById(courseId);
+        Optional<Quiz>   quizOpt   = quizService.getQuizById(quizId);
+        if (courseOpt.isEmpty() || quizOpt.isEmpty()) return "redirect:/courses";
+
+        Optional<User> userOpt = userService.getUserByUsername(auth.getName());
+        if (userOpt.isEmpty()) return "redirect:/login";
+        User user = userOpt.get();
+        Course course = courseOpt.get();
+        if (!course.getInstructor().getId().equals(user.getId()) && user.getRole() != Role.ADMIN)
+            return "redirect:/courses/" + courseId;
+
+        model.addAttribute("course", course);
+        model.addAttribute("quiz", quizOpt.get());
+        return "courses/quiz-thresholds";
+    }
+
+    @PostMapping("/{quizId}/thresholds")
+    public String saveThresholds(@PathVariable Long courseId,
+                                 @PathVariable Long quizId,
+                                 @RequestParam Integer excellentThreshold,
+                                 @RequestParam Integer goodThreshold,
+                                 @RequestParam Integer averageThreshold,
+                                 @RequestParam Integer passingThreshold,
+                                 @RequestParam(defaultValue = "false") Boolean allowMultipleAttempts,
+                                 Authentication auth,
+                                 RedirectAttributes redirectAttributes) {
+        Optional<Quiz> quizOpt = quizService.getQuizById(quizId);
+        if (quizOpt.isEmpty()) return "redirect:/courses/" + courseId + "/manage";
+
+        Quiz quiz = quizOpt.get();
+
+        if (excellentThreshold > goodThreshold
+                && goodThreshold > averageThreshold
+                && averageThreshold > passingThreshold
+                && passingThreshold >= 0
+                && excellentThreshold <= 100) {
+            quiz.setExcellentThreshold(excellentThreshold);
+            quiz.setGoodThreshold(goodThreshold);
+            quiz.setAverageThreshold(averageThreshold);
+            quiz.setPassingThreshold(passingThreshold);
+            quiz.setAllowMultipleAttempts(allowMultipleAttempts);
+            quizService.saveQuiz(quiz);
+            redirectAttributes.addFlashAttribute("success", "Beállítások sikeresen mentve!");
+        } else {
+            redirectAttributes.addFlashAttribute("error",
+                    "Érvénytelen ponthatárok! A határoknak 0–100 közt kell lenniük, csökkenő sorrendben.");
+        }
+        return "redirect:/courses/" + courseId + "/quizzes/" + quizId + "/thresholds";
+    }
+
+    // ── Teszt kitöltése (blokkolás ha már kitöltötte és csak 1x engedélyezett) ──
+
+    @GetMapping("/{quizId}/take")
+    public String takeQuiz(@PathVariable Long courseId, @PathVariable Long quizId,
+                           Model model, Authentication auth,
+                           RedirectAttributes redirectAttributes) {
+        Optional<Course> courseOpt = courseService.getCourseById(courseId);
+        Optional<Quiz>   quizOpt   = quizService.getQuizById(quizId);
+
+        if (courseOpt.isEmpty() || quizOpt.isEmpty()) return "redirect:/courses";
+
+        Quiz quiz = quizOpt.get();
+
+        // Ellenőrzés: már kitöltötte-e, és csak 1x engedélyezett?
+        if (auth != null && auth.isAuthenticated()) {
+            Optional<User> userOpt = userService.getUserByUsername(auth.getName());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                boolean alreadyDone = quizResultRepository.existsByUserAndQuiz(user, quiz);
+                boolean onlyOneAttempt = !Boolean.TRUE.equals(quiz.getAllowMultipleAttempts());
+
+                if (alreadyDone && onlyOneAttempt) {
+                    // Megmutatjuk az előző eredményt
+                    Optional<QuizResult> prevResult = quizResultRepository
+                            .findTopByUserAndQuizOrderByCompletedAtDesc(user, quiz);
+
+                    if (prevResult.isPresent()) {
+                        QuizResult r = prevResult.get();
+                        int e = quiz.getExcellentThreshold();
+                        int g = quiz.getGoodThreshold();
+                        int a = quiz.getAverageThreshold();
+                        int p = quiz.getPassingThreshold();
+
+                        model.addAttribute("course",         courseOpt.get());
+                        model.addAttribute("quiz",           quiz);
+                        model.addAttribute("score",          r.getScore());
+                        model.addAttribute("totalQuestions", r.getTotalQuestions());
+                        model.addAttribute("percentage",     r.getPercentage());
+                        model.addAttribute("grade",          r.getGrade());
+                        model.addAttribute("goodRange",      g + " – " + (e - 1) + "%");
+                        model.addAttribute("averageRange",   a + " – " + (g - 1) + "%");
+                        model.addAttribute("passingRange",   p + " – " + (a - 1) + "%");
+                        model.addAttribute("alreadyCompleted", true);
+                        return "courses/quiz-result";
+                    }
+                }
+            }
+        }
+
+        List<Question> questions = questionRepository.findByQuiz(quiz);
+        model.addAttribute("course",    courseOpt.get());
+        model.addAttribute("quiz",      quiz);
+        model.addAttribute("questions", questions);
+        return "courses/take-quiz";
+    }
+
+    // ── Teszt beküldése és kiértékelése ───────────────────────────────────
+
     @PostMapping("/{quizId}/submit")
     public String submitQuiz(@PathVariable Long courseId,
                              @PathVariable Long quizId,
@@ -80,83 +176,108 @@ public class QuizController {
                              Authentication auth,
                              Model model) {
 
-        Optional<Quiz> quizOpt = quizService.getQuizById(quizId);
+        Optional<Quiz>   quizOpt   = quizService.getQuizById(quizId);
         Optional<Course> courseOpt = courseService.getCourseById(courseId);
 
-        if (quizOpt.isPresent() && courseOpt.isPresent()) {
-            Quiz quiz = quizOpt.get();
+        if (quizOpt.isEmpty() || courseOpt.isEmpty()) return "redirect:/courses/" + courseId;
 
-            // Közvetlenül az adatbázisból vesszük a kérdéseket, hogy biztosan ne legyen üres a lista!
-            List<com.melearning.elearning.model.Question> questions = questionRepository.findByQuiz(quiz);
+        Quiz quiz = quizOpt.get();
+        List<Question> questions = questionRepository.findByQuiz(quiz);
 
-            int score = 0;
-            int totalQuestions = questions.size();
-
-            // Végigmegyünk a lekérdezett kérdéseken a kiértékeléshez
-            for (com.melearning.elearning.model.Question q : questions) {
-                String submittedAnswer = allParams.get("question_" + q.getId());
-                if (submittedAnswer != null && submittedAnswer.equals(q.getCorrectOption())) {
-                    score++;
-                }
-            }
-
-            // Százalék kiszámítása
-            int percentage = totalQuestions > 0 ? (int) Math.round(((double) score / totalQuestions) * 100) : 0;
-
-            // Eredmény elmentése az adatbázisba a bejelentkezett felhasználóhoz
-            if (auth != null && auth.isAuthenticated()) {
-                String username = auth.getName();
-
-                // Használjuk a korábban meglévő metódusodat a UserService-ből
-                Optional<com.melearning.elearning.model.User> currentUserOpt = userService.getUserByUsername(username);
-
-                if (currentUserOpt.isPresent()) {
-                    com.melearning.elearning.model.QuizResult result = new com.melearning.elearning.model.QuizResult();
-                    result.setUser(currentUserOpt.get());
-                    result.setQuiz(quiz);
-                    result.setScore(score);
-                    result.setTotalQuestions(totalQuestions);
-                    result.setPercentage(percentage);
-
-                    quizResultRepository.save(result); // Eredmény mentése
-                }
-            }
-
-            // Adatok átadása az eredmény oldalnak (quiz-result.html)
-            model.addAttribute("course", courseOpt.get());
-            model.addAttribute("quiz", quiz);
-            model.addAttribute("score", score);
-            model.addAttribute("totalQuestions", totalQuestions);
-            model.addAttribute("percentage", percentage);
-
-            return "courses/quiz-result";
+        int score = 0;
+        int totalQuestions = questions.size();
+        for (Question q : questions) {
+            String submitted = allParams.get("question_" + q.getId());
+            if (submitted != null && submitted.equals(q.getCorrectOption())) score++;
         }
 
-        return "redirect:/courses/" + courseId;
+        int percentage = totalQuestions > 0
+                ? (int) Math.round(((double) score / totalQuestions) * 100)
+                : 0;
+        int grade = quiz.calculateGrade(percentage);
+
+        int e = quiz.getExcellentThreshold();
+        int g = quiz.getGoodThreshold();
+        int a = quiz.getAverageThreshold();
+        int p = quiz.getPassingThreshold();
+
+        String goodRange    = g + " – " + (e - 1) + "%";
+        String averageRange = a + " – " + (g - 1) + "%";
+        String passingRange = p + " – " + (a - 1) + "%";
+
+        // Eredmény mentése (jeggyel együtt)
+        if (auth != null && auth.isAuthenticated()) {
+            Optional<User> currentUserOpt = userService.getUserByUsername(auth.getName());
+            if (currentUserOpt.isPresent()) {
+                QuizResult result = new QuizResult();
+                result.setUser(currentUserOpt.get());
+                result.setQuiz(quiz);
+                result.setScore(score);
+                result.setTotalQuestions(totalQuestions);
+                result.setPercentage(percentage);
+                result.setGrade(grade);   // ← jegy elmentése
+                quizResultRepository.save(result);
+            }
+        }
+
+        model.addAttribute("course",         courseOpt.get());
+        model.addAttribute("quiz",           quiz);
+        model.addAttribute("score",          score);
+        model.addAttribute("totalQuestions", totalQuestions);
+        model.addAttribute("percentage",     percentage);
+        model.addAttribute("grade",          grade);
+        model.addAttribute("goodRange",      goodRange);
+        model.addAttribute("averageRange",   averageRange);
+        model.addAttribute("passingRange",   passingRange);
+        model.addAttribute("alreadyCompleted", false);
+
+        return "courses/quiz-result";
     }
 
-    // Fogadja a kitöltött űrlapot és elmenti a kvízt a kérdésekkel együtt
-    @PostMapping("/create")
-    public String saveQuiz(@PathVariable Long courseId,
-                           @ModelAttribute Quiz quiz,
-                           Authentication auth,
-                           RedirectAttributes redirectAttributes) {
+    // ── Eredmények megtekintése (oktató) ──────────────────────────────────
 
+    @GetMapping("/{quizId}/results")
+    public String viewResults(@PathVariable Long courseId,
+                              @PathVariable Long quizId,
+                              Model model, Authentication auth) {
         Optional<Course> courseOpt = courseService.getCourseById(courseId);
+        Optional<Quiz>   quizOpt   = quizService.getQuizById(quizId);
+        if (courseOpt.isEmpty() || quizOpt.isEmpty()) return "redirect:/courses";
 
-        if (courseOpt.isPresent()) {
-            Course course = courseOpt.get();
-            quiz.setCourse(course); // Hozzákötjük a kvízt a kurzushoz
+        Optional<User> userOpt = userService.getUserByUsername(auth.getName());
+        if (userOpt.isEmpty()) return "redirect:/login";
+        User user = userOpt.get();
+        Course course = courseOpt.get();
 
-            quizService.saveQuiz(quiz); // A Service elmenti a kvízt ÉS a benne lévő kérdéseket is
+        // Csak oktató vagy admin láthatja
+        if (!course.getInstructor().getId().equals(user.getId()) && user.getRole() != Role.ADMIN)
+            return "redirect:/courses/" + courseId;
 
-            System.out.println("Beérkezett kérdések száma: " + quiz.getQuestions().size());
+        Quiz quiz = quizOpt.get();
+        List<QuizResult> results = quizResultRepository.findByQuiz(quiz);
 
-            redirectAttributes.addFlashAttribute("success", "Kérdéssor sikeresen hozzáadva a kurzushoz!");
-            return "redirect:/courses/" + courseId + "/manage";
+        // Statisztikák Java oldalon kiszámítva (Thymeleaf-ben ne kelljen)
+        int totalAttempts = results.size();
+        String avgPct = "–";
+        String avgGrade = "–";
+        String passRatio = "0/" + totalAttempts;
+
+        if (totalAttempts > 0) {
+            double pctSum   = results.stream().mapToInt(QuizResult::getPercentage).average().orElse(0);
+            double gradeSum = results.stream().mapToInt(QuizResult::getGrade).average().orElse(0);
+            long passed     = results.stream().filter(r -> r.getGrade() >= 2).count();
+            avgPct   = String.format("%.1f%%", pctSum);
+            avgGrade = String.format("%.2f", gradeSum);
+            passRatio = passed + "/" + totalAttempts;
         }
 
-        redirectAttributes.addFlashAttribute("error", "Hiba történt a kérdéssor mentésekor.");
-        return "redirect:/courses";
+        model.addAttribute("course",       course);
+        model.addAttribute("quiz",         quiz);
+        model.addAttribute("results",      results);
+        model.addAttribute("totalAttempts",totalAttempts);
+        model.addAttribute("avgPct",       avgPct);
+        model.addAttribute("avgGrade",     avgGrade);
+        model.addAttribute("passRatio",    passRatio);
+        return "courses/quiz-results";
     }
 }

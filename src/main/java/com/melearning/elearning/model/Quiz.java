@@ -15,6 +15,15 @@ public class Quiz {
     @NotBlank
     private String title;
 
+    // Értékelési határok (%)
+    private Integer excellentThreshold = 85;
+    private Integer goodThreshold      = 70;
+    private Integer averageThreshold   = 55;
+    private Integer passingThreshold   = 40;
+
+    // Több kitöltés engedélyezése (true = bármennyiszer, false = csak 1x)
+    private Boolean allowMultipleAttempts = true;
+
     @ManyToOne
     @JoinColumn(name = "course_id")
     private Course course;
@@ -29,6 +38,14 @@ public class Quiz {
         this.course = course;
     }
 
+    public int calculateGrade(int percentage) {
+        if (percentage >= excellentThreshold) return 5;
+        if (percentage >= goodThreshold)      return 4;
+        if (percentage >= averageThreshold)   return 3;
+        if (percentage >= passingThreshold)   return 2;
+        return 1;
+    }
+
     // Getterek és Setterek
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -41,4 +58,19 @@ public class Quiz {
 
     public List<Question> getQuestions() { return questions; }
     public void setQuestions(List<Question> questions) { this.questions = questions; }
+
+    public Integer getExcellentThreshold() { return excellentThreshold; }
+    public void setExcellentThreshold(Integer excellentThreshold) { this.excellentThreshold = excellentThreshold; }
+
+    public Integer getGoodThreshold() { return goodThreshold; }
+    public void setGoodThreshold(Integer goodThreshold) { this.goodThreshold = goodThreshold; }
+
+    public Integer getAverageThreshold() { return averageThreshold; }
+    public void setAverageThreshold(Integer averageThreshold) { this.averageThreshold = averageThreshold; }
+
+    public Integer getPassingThreshold() { return passingThreshold; }
+    public void setPassingThreshold(Integer passingThreshold) { this.passingThreshold = passingThreshold; }
+
+    public Boolean getAllowMultipleAttempts() { return allowMultipleAttempts; }
+    public void setAllowMultipleAttempts(Boolean allowMultipleAttempts) { this.allowMultipleAttempts = allowMultipleAttempts; }
 }
