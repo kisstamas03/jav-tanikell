@@ -9,42 +9,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-<aside class="sidebar">
-  <a href="/" class="sidebar-brand">
-    <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
-    <div><div class="brand-name">ME-Learning</div><div class="brand-sub">Platform</div></div>
-  </a>
-  <nav class="sidebar-nav">
-    <div class="nav-label">Navigáció</div>
-    <a href="/" class="sl "><i class="fas fa-home"></i>Főoldal</a>
-    <a href="/courses" class="sl "><i class="fas fa-book-open"></i>Kurzusok</a>
-    <a href="/about" class="sl "><i class="fas fa-info-circle"></i>Rólunk</a>
-    <div sec:authorize="isAuthenticated()">
-      <div class="nav-label">Fiók</div>
-      <a href="/dashboard" class="sl "><i class="fas fa-th-large"></i>Vezérlőpult</a>
-      <a href="/my-courses" class="sl "><i class="fas fa-layer-group"></i>Kurzusaim</a>
-      <a href="/profile" class="sl active"><i class="fas fa-user"></i>Profil</a>
-      <div sec:authorize="hasAnyRole('INSTRUCTOR','ADMIN')">
-        <a href="/courses/create" class="sl "><i class="fas fa-plus-circle"></i>Új kurzus</a>
-      </div>
-    </div>
-  </nav>
-  <div sec:authorize="isAuthenticated()" class="sidebar-footer">
-    <div class="sidebar-user">
-      <div class="u-avatar"><i class="fas fa-user"></i></div>
-      <div><div class="u-name" sec:authentication="name">Felhasználó</div><div class="u-role">Bejelentkezve</div></div>
-    </div>
-    <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés</button></form>
-  </div>
-  <div sec:authorize="isAnonymous()" class="sidebar-auth">
-    <a href="/login" class="btn-ao"><i class="fas fa-sign-in-alt me-2"></i>Bejelentkezés</a>
-    <a href="/register" class="btn-as"><i class="fas fa-user-plus me-2"></i>Regisztráció</a>
-  </div>
-</aside>
+
+<div th:replace="~{fragments/sidebar :: sidebar('profile')}"></div>
+
 <div class="main-content">
   <div class="page-header"><div class="d-flex justify-content-between align-items-center"><div><h1><i class='fas fa-user me-2'></i>Profil</h1><p>Kezeld fiókodat</p></div></div></div>
   <div class="content">
-
     <div class="row g-4">
       <div class="col-lg-4">
         <div class="card-box card-box-body text-center" style="padding:28px;">
@@ -93,71 +63,41 @@
         <div class="card-box">
           <div class="card-box-head"><h5><i class="fas fa-lock me-2 text-primary"></i>Jelszó módosítása</h5></div>
           <div class="card-box-body">
-
             <div th:if="${pwError}" class="alert alert-danger mb-3">
-              <i class="fas fa-exclamation-circle me-2"></i>
-              <span th:text="${pwError}"></span>
+              <i class="fas fa-exclamation-circle me-2"></i><span th:text="${pwError}"></span>
             </div>
             <div th:if="${pwSuccess}" class="alert alert-success mb-3">
-              <i class="fas fa-check-circle me-2"></i>
-              <span th:text="${pwSuccess}"></span>
+              <i class="fas fa-check-circle me-2"></i><span th:text="${pwSuccess}"></span>
             </div>
-
             <form th:action="@{/change-password}" method="post">
-              <div class="mb-3">
-                <label class="form-label">Jelenlegi jelszó</label>
-                <input type="password" class="form-control" name="currentPassword" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Új jelszó <span style="color:#9CA3AF;font-weight:400;">(min. 6 karakter)</span></label>
-                <input type="password" class="form-control" name="newPassword" required minlength="6">
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Megerősítés</label>
-                <input type="password" class="form-control" name="confirmPassword" required>
-              </div>
-              <button type="submit" class="btn btn-primary btn-sm">
-                <i class="fas fa-key me-2"></i>Jelszó frissítése
-              </button>
+              <div class="mb-3"><label class="form-label">Jelenlegi jelszó</label><input type="password" class="form-control" name="currentPassword" required></div>
+              <div class="mb-3"><label class="form-label">Új jelszó <span style="color:#9CA3AF;font-weight:400;">(min. 6 karakter)</span></label><input type="password" class="form-control" name="newPassword" required minlength="6"></div>
+              <div class="mb-3"><label class="form-label">Megerősítés</label><input type="password" class="form-control" name="confirmPassword" required></div>
+              <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-key me-2"></i>Jelszó frissítése</button>
             </form>
-
           </div>
         </div>
         <div class="card-box" style="border-color:#FECDD3;">
           <div class="card-box-head" style="background:#FFF1F2;">
-            <h5 style="color:#9F1239;">
-              <i class="fas fa-exclamation-triangle me-2"></i>Veszélyzóna
-            </h5>
+            <h5 style="color:#9F1239;"><i class="fas fa-exclamation-triangle me-2"></i>Veszélyzóna</h5>
           </div>
           <div class="card-box-body">
-            <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
-              A fiók törlése <strong>végleges és visszafordíthatatlan</strong> művelet.
-              Minden adatod, beiratkozásod és kvíz eredményed elvész.
-            </p>
-            <!-- Gomb ami megnyitja a modalt -->
-            <button class="btn btn-sm btn-outline-danger"
-                    data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">A fiók törlése <strong>végleges és visszafordíthatatlan</strong> művelet.</p>
+            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
               <i class="fas fa-trash me-2"></i>Fiók törlése
             </button>
           </div>
         </div>
 
-        <!-- Megerősítő modal -->
         <div class="modal fade" id="deleteModal" tabindex="-1">
           <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius:16px;border:none;
-                                      box-shadow:0 20px 60px rgba(0,0,0,0.15);">
-              <div class="modal-header" style="background:#FFF1F2;border-radius:16px 16px 0 0;
-                                        border-bottom:1px solid #FECDD3;">
-                <h5 class="modal-title" style="color:#9F1239;font-weight:700;">
-                  <i class="fas fa-exclamation-triangle me-2"></i>Fiók törlése
-                </h5>
+            <div class="modal-content" style="border-radius:16px;border:none;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
+              <div class="modal-header" style="background:#FFF1F2;border-radius:16px 16px 0 0;border-bottom:1px solid #FECDD3;">
+                <h5 class="modal-title" style="color:#9F1239;font-weight:700;"><i class="fas fa-exclamation-triangle me-2"></i>Fiók törlése</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
               </div>
               <div class="modal-body" style="padding:28px;">
-                <p style="color:#374151;margin-bottom:8px;">
-                  Biztosan törölni szeretnéd a fiókodat?
-                </p>
+                <p style="color:#374151;margin-bottom:8px;">Biztosan törölni szeretnéd a fiókodat?</p>
                 <ul style="color:#6B7280;font-size:13px;padding-left:18px;margin-bottom:0;">
                   <li>Minden beiratkozásod törlődik</li>
                   <li>Kvíz eredményeid elvesznek</li>
@@ -165,15 +105,9 @@
                 </ul>
               </div>
               <div class="modal-footer" style="border-top:1px solid #F3F4F6;padding:16px 24px;">
-                <button type="button" class="btn btn-sm btn-outline-secondary"
-                        data-bs-dismiss="modal">
-                  <i class="fas fa-times me-2"></i>Mégse
-                </button>
-                <!-- Ez a form küldi el a törlési kérést -->
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Mégse</button>
                 <form th:action="@{/delete-account}" method="post" style="margin:0;">
-                  <button type="submit" class="btn btn-sm btn-danger">
-                    <i class="fas fa-trash me-2"></i>Igen, törlöm a fiókomat
-                  </button>
+                  <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash me-2"></i>Igen, törlöm a fiókomat</button>
                 </form>
               </div>
             </div>
@@ -186,13 +120,12 @@
     <div class="row g-3">
       <div class="col-md-4"><h5><i class="fas fa-graduation-cap me-2" style="color:#3B6FE8;"></i>ME-Learning</h5><p>Modern online tanulási platform.</p></div>
       <div class="col-md-4"><h6>Linkek</h6><a href="/courses">Kurzusok</a><a href="/about">Rólunk</a></div>
-      <div class="col-md-4"><h6>Kapcsolat</h6><p><i class="fas fa-envelope me-2"></i><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="721b1c141d32171e1713001c1b1c155c1a07">[email&#160;protected]</a></p></div>
+      <div class="col-md-4"><h6>Kapcsolat</h6><a href="mailto:me.learning.admin@gmail.com"><i class="fas fa-envelope me-2"></i>me.learning.admin@gmail.com</a></div>
     </div>
     <hr class="footer-divider">
     <div class="footer-copy">&copy; 2024 ME-Learning. Minden jog fenntartva.</div>
   </footer>
 </div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

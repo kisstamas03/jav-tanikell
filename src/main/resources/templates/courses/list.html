@@ -10,38 +10,7 @@
 </head>
 <body>
 
-<aside class="sidebar">
-  <a href="/" class="sidebar-brand">
-    <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
-    <div><div class="brand-name">ME-Learning</div><div class="brand-sub">Platform</div></div>
-  </a>
-  <nav class="sidebar-nav">
-    <div class="nav-label">Navigáció</div>
-    <a href="/" class="sl"><i class="fas fa-home"></i>Főoldal</a>
-    <a href="/courses" class="sl active"><i class="fas fa-book-open"></i>Kurzusok</a>
-    <a href="/about" class="sl"><i class="fas fa-info-circle"></i>Rólunk</a>
-    <div sec:authorize="isAuthenticated()">
-      <div class="nav-label">Fiók</div>
-      <a href="/dashboard" class="sl"><i class="fas fa-th-large"></i>Vezérlőpult</a>
-      <a href="/my-courses" class="sl"><i class="fas fa-layer-group"></i>Kurzusaim</a>
-      <a href="/profile" class="sl"><i class="fas fa-user"></i>Profil</a>
-      <div sec:authorize="hasAnyRole('INSTRUCTOR','ADMIN')">
-        <a href="/courses/create" class="sl"><i class="fas fa-plus-circle"></i>Új kurzus</a>
-      </div>
-    </div>
-  </nav>
-  <div sec:authorize="isAuthenticated()" class="sidebar-footer">
-    <div class="sidebar-user">
-      <div class="u-avatar"><i class="fas fa-user"></i></div>
-      <div><div class="u-name" sec:authentication="name">Felhasználó</div><div class="u-role">Bejelentkezve</div></div>
-    </div>
-    <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés</button></form>
-  </div>
-  <div sec:authorize="isAnonymous()" class="sidebar-auth">
-    <a href="/login" class="btn-ao"><i class="fas fa-sign-in-alt me-2"></i>Bejelentkezés</a>
-    <a href="/register" class="btn-as"><i class="fas fa-user-plus me-2"></i>Regisztráció</a>
-  </div>
-</aside>
+<div th:replace="~{fragments/sidebar :: sidebar('courses')}"></div>
 
 <div class="main-content">
   <div class="page-header">
@@ -84,7 +53,18 @@
             <span class="enroll-badge"><i class="fas fa-users me-1"></i><span th:text="${course.enrolledUsers.size()}">0</span></span>
           </div>
           <div style="padding:0 16px 14px;">
-            <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-primary btn-sm w-100"><i class="fas fa-arrow-right me-1"></i>Részletek</a>
+            <!-- Oktató: a saját kurzusára kattintva Kezelés oldal nyílik -->
+            <a sec:authorize="hasRole('INSTRUCTOR')"
+               th:href="@{/courses/{id}/manage(id=${course.id})}"
+               class="btn btn-primary btn-sm w-100">
+              <i class="fas fa-cog me-1"></i>Kezelés
+            </a>
+            <!-- Diák és Admin: Részletek oldal -->
+            <a sec:authorize="!hasRole('INSTRUCTOR')"
+               th:href="@{/courses/{id}(id=${course.id})}"
+               class="btn btn-primary btn-sm w-100">
+              <i class="fas fa-arrow-right me-1"></i>Részletek
+            </a>
           </div>
         </div>
       </div>

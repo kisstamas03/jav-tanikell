@@ -20,7 +20,6 @@ public class SecurityConfig {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
-    // application-dev.properties-ben true, application-prod.properties-ben false
     @Value("${h2.console.security.enabled:false}")
     private boolean h2ConsoleEnabled;
 
@@ -46,10 +45,26 @@ public class SecurityConfig {
                     authz
                             .requestMatchers("/", "/login", "/register",
                                     "/css/**", "/js/**", "/images/**").permitAll()
-                            .requestMatchers("/courses/create", "/courses/*/manage",
-                                    "/courses/*/add-student", "/courses/*/remove-student")
-                            .hasAnyRole("INSTRUCTOR", "ADMIN")
+
+                            // ── Oktató + Admin műveletek ──────────────────────────────
+                            .requestMatchers(
+                                    "/courses/create",
+                                    "/courses/*/manage",
+                                    "/courses/*/delete",
+                                    "/courses/*/delete-presentation",
+                                    "/courses/*/add-student",
+                                    "/courses/*/remove-student",
+                                    "/courses/*/add-presentations",
+                                    "/courses/*/quizzes/create",
+                                    "/courses/*/quizzes/*/delete",
+                                    "/courses/*/quizzes/*/thresholds",
+                                    "/courses/*/quizzes/*/results"
+                            ).hasAnyRole("INSTRUCTOR", "ADMIN")
+
+                            // ── Admin-only műveletek ───────────────────────────────────
                             .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                            // ── Minden más: be kell jelentkezni ───────────────────────
                             .anyRequest().authenticated();
                 })
                 .formLogin(form -> form

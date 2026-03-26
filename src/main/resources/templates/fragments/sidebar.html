@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<!--
+  =============================================================
+  ME-Learning – Közös sidebar fragment
+  Használat: <div th:replace="~{fragments/sidebar :: sidebar(activeLink='courses')}"></div>
+  activeLink lehetséges értékei:
+    home | courses | about | dashboard | my-courses | profile | create-course
+  =============================================================
+-->
+
+<aside th:fragment="sidebar(activeLink)" class="sidebar">
+
+  <!-- Brand -->
+  <a href="/" class="sidebar-brand">
+    <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+    <div>
+      <div class="brand-name">ME-Learning</div>
+      <div class="brand-sub">Platform</div>
+    </div>
+  </a>
+
+  <!-- Navigáció -->
+  <nav class="sidebar-nav">
+    <div class="nav-label">Navigáció</div>
+
+    <a href="/"
+       th:classappend="${activeLink == 'home'} ? 'active' : ''"
+       class="sl">
+      <i class="fas fa-home"></i>Főoldal
+    </a>
+
+    <a href="/courses"
+       th:classappend="${activeLink == 'courses'} ? 'active' : ''"
+       class="sl">
+      <i class="fas fa-book-open"></i>Kurzusok
+    </a>
+
+    <a href="/about"
+       th:classappend="${activeLink == 'about'} ? 'active' : ''"
+       class="sl">
+      <i class="fas fa-info-circle"></i>Rólunk
+    </a>
+
+    <!-- Bejelentkezett felhasználóknak -->
+    <div sec:authorize="isAuthenticated()">
+      <div class="nav-label">Fiók</div>
+
+      <a href="/dashboard"
+         th:classappend="${activeLink == 'dashboard'} ? 'active' : ''"
+         class="sl">
+        <i class="fas fa-th-large"></i>Vezérlőpult
+      </a>
+
+      <!--
+        "Kurzusaim" csak DIÁKOKNAK és ADMINNAK látható.
+        Az oktatóknak a "Saját kurzusok" a vezérlőpulton érhető el.
+      -->
+      <div sec:authorize="hasRole('STUDENT') or hasRole('ADMIN')">
+        <a href="/my-courses"
+           th:classappend="${activeLink == 'my-courses'} ? 'active' : ''"
+           class="sl">
+          <i class="fas fa-layer-group"></i>Kurzusaim
+        </a>
+      </div>
+
+      <a href="/profile"
+         th:classappend="${activeLink == 'profile'} ? 'active' : ''"
+         class="sl">
+        <i class="fas fa-user"></i>Profil
+      </a>
+
+      <!-- Kurzus létrehozása: csak OKTATÓ és ADMIN látja -->
+      <div sec:authorize="hasAnyRole('INSTRUCTOR', 'ADMIN')">
+        <a href="/courses/create"
+           th:classappend="${activeLink == 'create-course'} ? 'active' : ''"
+           class="sl">
+          <i class="fas fa-plus-circle"></i>Új kurzus
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Bejelentkezett felhasználó: név + kijelentkezés -->
+  <div sec:authorize="isAuthenticated()" class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="u-avatar"><i class="fas fa-user"></i></div>
+      <div>
+        <!--
+          sec:authentication="principal.username" adja vissza a
+          bejelentkezett felhasználó nevét (a "Felhasználó" csak
+          fallback szöveg, Thymeleaf Security felülírja)
+        -->
+        <div class="u-name" sec:authentication="name">Felhasználó</div>
+        <div class="u-role"
+             sec:authorize="hasRole('ADMIN')">Admin</div>
+        <div class="u-role"
+             sec:authorize="hasRole('INSTRUCTOR')">Oktató</div>
+        <div class="u-role"
+             sec:authorize="hasRole('STUDENT')">Hallgató</div>
+      </div>
+    </div>
+    <form th:action="@{/logout}" method="post">
+      <button type="submit" class="btn-logout">
+        <i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés
+      </button>
+    </form>
+  </div>
+
+  <!-- Anonim látogató: bejelentkezés + regisztráció -->
+  <div sec:authorize="isAnonymous()" class="sidebar-auth">
+    <a href="/login" class="btn-ao">
+      <i class="fas fa-sign-in-alt me-2"></i>Bejelentkezés
+    </a>
+    <a href="/register" class="btn-as">
+      <i class="fas fa-user-plus me-2"></i>Regisztráció
+    </a>
+  </div>
+
+</aside>
+
+</html>

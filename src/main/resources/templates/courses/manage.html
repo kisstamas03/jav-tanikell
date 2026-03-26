@@ -16,23 +16,30 @@
   </a>
   <nav class="sidebar-nav">
     <div class="nav-label">Navigáció</div>
-    <a href="/" class="sl "><i class="fas fa-home"></i>Főoldal</a>
+    <a href="/" class="sl"><i class="fas fa-home"></i>Főoldal</a>
     <a href="/courses" class="sl active"><i class="fas fa-book-open"></i>Kurzusok</a>
-    <a href="/about" class="sl "><i class="fas fa-info-circle"></i>Rólunk</a>
+    <a href="/about" class="sl"><i class="fas fa-info-circle"></i>Rólunk</a>
     <div sec:authorize="isAuthenticated()">
       <div class="nav-label">Fiók</div>
-      <a href="/dashboard" class="sl "><i class="fas fa-th-large"></i>Vezérlőpult</a>
-      <a href="/my-courses" class="sl "><i class="fas fa-layer-group"></i>Kurzusaim</a>
-      <a href="/profile" class="sl "><i class="fas fa-user"></i>Profil</a>
+      <a href="/dashboard" class="sl"><i class="fas fa-th-large"></i>Vezérlőpult</a>
+      <div sec:authorize="hasRole('STUDENT') or hasRole('ADMIN')">
+        <a href="/my-courses" class="sl"><i class="fas fa-layer-group"></i>Kurzusaim</a>
+      </div>
+      <a href="/profile" class="sl"><i class="fas fa-user"></i>Profil</a>
       <div sec:authorize="hasAnyRole('INSTRUCTOR','ADMIN')">
-        <a href="/courses/create" class="sl "><i class="fas fa-plus-circle"></i>Új kurzus</a>
+        <a href="/courses/create" class="sl"><i class="fas fa-plus-circle"></i>Új kurzus</a>
       </div>
     </div>
   </nav>
   <div sec:authorize="isAuthenticated()" class="sidebar-footer">
     <div class="sidebar-user">
       <div class="u-avatar"><i class="fas fa-user"></i></div>
-      <div><div class="u-name" sec:authentication="name">Felhasználó</div><div class="u-role">Bejelentkezve</div></div>
+      <div>
+        <div class="u-name" sec:authentication="name">Felhasználó</div>
+        <div class="u-role" sec:authorize="hasRole('ADMIN')">Admin</div>
+        <div class="u-role" sec:authorize="hasRole('INSTRUCTOR')">Oktató</div>
+        <div class="u-role" sec:authorize="hasRole('STUDENT')">Hallgató</div>
+      </div>
     </div>
     <form th:action="@{/logout}" method="post"><button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt me-2"></i>Kijelentkezés</button></form>
   </div>
@@ -41,19 +48,43 @@
     <a href="/register" class="btn-as"><i class="fas fa-user-plus me-2"></i>Regisztráció</a>
   </div>
 </aside>
+
 <div class="main-content">
-  <div class="page-header"><div class="d-flex justify-content-between align-items-center"><div><h1><i class='fas fa-cog me-2'></i>Kurzus kezelése</h1><p><span th:text="${course.title}">Kurzus neve</span></p></div></div></div>
+  <div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1><i class='fas fa-cog me-2'></i>Kurzus kezelése</h1>
+        <p><span th:text="${course.title}">Kurzus neve</span></p>
+      </div>
+      <a href="/courses" class="btn btn-sm"
+         style="background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);">
+        <i class="fas fa-arrow-left me-1"></i>Vissza
+      </a>
+    </div>
+  </div>
+
   <div class="content">
 
-    <div th:if="${success}" class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show"><i class="fas fa-exclamation-triangle me-2"></i><span th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+      <i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+      <i class="fas fa-exclamation-triangle me-2"></i><span th:text="${error}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 
     <div class="row g-4">
+
+      <!-- ═══════════ BAL OSZLOP ═══════════ -->
       <div class="col-lg-6">
+
+        <!-- Beiratkozott diákok -->
         <div class="card-box">
           <div class="card-box-head">
             <h5><i class="fas fa-users me-2 text-primary"></i>Beiratkozott diákok</h5>
-            <span class="badge" style="background:#EEF4FF;color:#3B6FE8;" th:text="${course.enrolledUsers.size()} + ' fő'">0</span>
+            <span class="badge" style="background:#EEF4FF;color:#3B6FE8;"
+                  th:text="${course.enrolledUsers.size()} + ' fő'">0</span>
           </div>
           <div class="card-box-body">
             <div th:if="${course.enrolledUsers != null and not course.enrolledUsers.empty}">
@@ -64,100 +95,277 @@
                 </div>
                 <form th:action="@{/courses/{id}/remove-student(id=${course.id})}" method="post">
                   <input type="hidden" name="studentId" th:value="${s.id}">
-                  <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-times me-1"></i>Eltávolítás</button>
+                  <button type="submit" class="btn btn-sm btn-outline-danger"
+                          onclick="return confirm('Biztosan eltávolítod ezt a diákot?')">
+                    <i class="fas fa-times me-1"></i>Eltávolítás
+                  </button>
                 </form>
               </div>
             </div>
-            <div th:if="${course.enrolledUsers == null or course.enrolledUsers.empty}" class="text-center py-4" style="color:var(--muted);">
+            <div th:if="${course.enrolledUsers == null or course.enrolledUsers.empty}"
+                 class="text-center py-4" style="color:var(--muted);">
               <i class="fas fa-user-slash" style="font-size:28px;opacity:.2;display:block;margin-bottom:8px;"></i>
               <p style="font-size:13px;margin:0;">Még nincs beiratkozott diák</p>
             </div>
           </div>
         </div>
 
+        <!-- Feltöltött prezentációk listája -->
         <div class="card-box">
           <div class="card-box-head">
-            <h5><i class="fas fa-tasks me-2 text-primary"></i>Kérdéssorok</h5>
-            <span class="badge" style="background:#EEF4FF;color:#3B6FE8;" th:text="${quizzes != null ? quizzes.size() : 0} + ' db'">0</span>
+            <h5><i class="fas fa-file-pdf me-2 text-primary"></i>Feltöltött prezentációk</h5>
+            <span class="badge" style="background:#EEF4FF;color:#3B6FE8;"
+                  th:text="${presentations != null ? presentations.size() : 0} + ' db'">0</span>
           </div>
           <div class="card-box-body">
-            <div th:if="${quizzes != null and not quizzes.empty}">
-              <div th:each="q : ${quizzes}" class="quiz-row">
-                <div>
-                  <div style="font-weight:600;font-size:13px;" th:text="${q.title}">Kvíz neve</div>
-                  <div style="font-size:11.5px;color:var(--muted);">
-                    <span th:text="${q.questions.size()} + ' kérdés'">0</span>
-                    &nbsp;·&nbsp;
-                    Jeles: <strong th:text="${q.excellentThreshold} + '%'"></strong>
-                    &nbsp;·&nbsp;
-                    <span th:if="${q.allowMultipleAttempts}" style="color:#16A34A;"><i class="fas fa-infinity me-1"></i>Többször</span>
-                    <span th:unless="${q.allowMultipleAttempts}" style="color:#64748B;"><i class="fas fa-lock me-1"></i>Csak 1×</span>
+            <div th:if="${presentations != null and not presentations.empty}">
+              <div th:each="p, stat : ${presentations}" class="pres-item">
+                <div class="d-flex align-items-center gap-2" style="min-width:0;flex:1;">
+                  <span class="badge flex-shrink-0"
+                        style="background:#FFF1F2;color:#9F1239;min-width:26px;text-align:center;"
+                        th:text="${stat.count}">1</span>
+                  <div style="min-width:0;">
+                    <div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                         th:text="${p.fileName}">fajl.pdf</div>
+                    <div style="font-size:11px;color:var(--muted);"
+                         th:text="${#temporals.format(p.createdAt,'yyyy.MM.dd.')}">dátum</div>
                   </div>
                 </div>
-                <div class="d-flex gap-1">
-                  <a th:href="@{/courses/{cId}/quizzes/{qId}/results(cId=${course.id},qId=${q.id})}" class="btn btn-sm btn-outline-success"><i class="fas fa-chart-bar me-1"></i>Eredmények</a>
-                  <a th:href="@{/courses/{cId}/quizzes/{qId}/thresholds(cId=${course.id},qId=${q.id})}" class="btn btn-sm btn-outline-primary"><i class="fas fa-sliders-h me-1"></i>Beállítások</a>
+                <div class="d-flex gap-2 flex-shrink-0">
+                  <a th:href="@{/presentations/{id}/content(id=${p.id})}"
+                     class="btn btn-sm btn-outline-primary" target="_blank" title="Megtekintés">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <form th:action="@{/courses/{id}/delete-presentation(id=${course.id})}"
+                        method="post" style="margin:0;">
+                    <input type="hidden" name="presentationId" th:value="${p.id}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Törlés"
+                            onclick="return confirm('Biztosan törlöd ezt a prezentációt?')">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </form>
                 </div>
               </div>
             </div>
-            <div th:if="${quizzes == null or quizzes.empty}" class="text-center py-4" style="color:var(--muted);">
+            <div th:if="${presentations == null or presentations.empty}"
+                 class="text-center py-4" style="color:var(--muted);">
+              <i class="fas fa-inbox" style="font-size:28px;opacity:.2;display:block;margin-bottom:8px;"></i>
+              <p style="font-size:13px;margin:0;">Még nincsenek feltöltött prezentációk</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kérdéssorok -->
+        <div class="card-box">
+          <div class="card-box-head">
+            <h5><i class="fas fa-tasks me-2 text-primary"></i>Kérdéssorok</h5>
+            <span class="badge" style="background:#EEF4FF;color:#3B6FE8;"
+                  th:text="${quizzes != null ? quizzes.size() : 0} + ' db'">0</span>
+          </div>
+          <div class="card-box-body">
+            <div th:if="${quizzes != null and not quizzes.empty}">
+              <div th:each="q : ${quizzes}" class="quiz-row"
+                   style="flex-direction:column;align-items:flex-start;gap:10px;">
+                <div class="d-flex justify-content-between align-items-start w-100">
+                  <div>
+                    <div style="font-weight:600;font-size:13px;" th:text="${q.title}">Kvíz neve</div>
+                    <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">
+                      <span th:text="${q.questions.size()} + ' kérdés'">0</span>
+                      &nbsp;·&nbsp;
+                      Jeles: <strong th:text="${q.excellentThreshold} + '%'"></strong>
+                      &nbsp;·&nbsp;
+                      <span th:if="${q.allowMultipleAttempts}" style="color:#16A34A;">
+                        <i class="fas fa-infinity me-1"></i>Többször
+                      </span>
+                      <span th:unless="${q.allowMultipleAttempts}" style="color:#64748B;">
+                        <i class="fas fa-lock me-1"></i>Csak 1×
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex gap-1 w-100">
+                  <a th:href="@{/courses/{cId}/quizzes/{qId}/results(cId=${course.id},qId=${q.id})}"
+                     class="btn btn-sm btn-outline-success flex-fill">
+                    <i class="fas fa-chart-bar me-1"></i>Eredmények
+                  </a>
+                  <a th:href="@{/courses/{cId}/quizzes/{qId}/thresholds(cId=${course.id},qId=${q.id})}"
+                     class="btn btn-sm btn-outline-primary flex-fill">
+                    <i class="fas fa-sliders-h me-1"></i>Beállítások
+                  </a>
+                  <form th:action="@{/courses/{cId}/quizzes/{qId}/delete(cId=${course.id},qId=${q.id})}"
+                        method="post" style="margin:0;">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Kérdéssor törlése"
+                            onclick="return confirm('Biztosan törlöd ezt a kérdéssort?\nAz összes kitöltési eredmény is törlődik!')">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <div th:if="${quizzes == null or quizzes.empty}"
+                 class="text-center py-4" style="color:var(--muted);">
               <i class="fas fa-clipboard-list" style="font-size:28px;opacity:.2;display:block;margin-bottom:8px;"></i>
               <p style="font-size:13px;margin:0;">Még nincsenek kérdéssorok</p>
             </div>
           </div>
         </div>
+
       </div>
 
+      <!-- ═══════════ JOBB OSZLOP ═══════════ -->
       <div class="col-lg-6">
+
+        <!-- Diák hozzáadása -->
         <div class="card-box">
-          <div class="card-box-head"><h5><i class="fas fa-user-plus me-2 text-primary"></i>Diák hozzáadása</h5></div>
+          <div class="card-box-head">
+            <h5><i class="fas fa-user-plus me-2 text-primary"></i>Diák hozzáadása</h5>
+          </div>
           <div class="card-box-body">
             <form th:action="@{/courses/{id}/add-student(id=${course.id})}" method="post">
               <div class="mb-3">
                 <label class="form-label">Válassz diákot</label>
                 <select class="form-select" name="studentId" required>
                   <option value="">Válassz…</option>
-                  <option th:each="s : ${allStudents}" th:value="${s.id}"
+                  <option th:each="s : ${allStudents}"
+                          th:value="${s.id}"
                           th:text="|${s.firstName} ${s.lastName} (${s.email})|"
                           th:unless="${course.enrolledUsers.contains(s)}">Diák</option>
                 </select>
               </div>
-              <button type="submit" class="btn btn-primary btn-sm w-100"><i class="fas fa-plus me-2"></i>Hozzáadás</button>
+              <button type="submit" class="btn btn-primary btn-sm w-100">
+                <i class="fas fa-plus me-2"></i>Hozzáadás
+              </button>
             </form>
           </div>
         </div>
 
+        <!-- Prezentáció feltöltése -->
         <div class="card-box">
-          <div class="card-box-head"><h5><i class="fas fa-file-upload me-2 text-primary"></i>Új prezentáció</h5></div>
+          <div class="card-box-head">
+            <h5><i class="fas fa-file-upload me-2 text-primary"></i>Új prezentáció feltöltése</h5>
+          </div>
           <div class="card-box-body">
-            <form th:action="@{/courses/{id}/add-presentations(id=${course.id})}" method="post" enctype="multipart/form-data">
+            <form th:action="@{/courses/{id}/add-presentations(id=${course.id})}"
+                  method="post" enctype="multipart/form-data">
               <div class="mb-3">
                 <label class="form-label">PDF / PPT / PPTX fájlok</label>
-                <input type="file" class="form-control" name="newPresentations" accept=".pdf,.ppt,.pptx" multiple required>
+                <input type="file" class="form-control" name="newPresentations"
+                       accept=".pdf,.ppt,.pptx" multiple required>
+                <small style="color:var(--muted);font-size:12px;">
+                  Max. 50 MB fájlonként · PPT/PPTX automatikusan PDF-re konvertálódik
+                </small>
               </div>
-              <button type="submit" class="btn btn-primary btn-sm w-100"><i class="fas fa-upload me-2"></i>Feltöltés</button>
+              <button type="submit" class="btn btn-primary btn-sm w-100">
+                <i class="fas fa-upload me-2"></i>Feltöltés
+              </button>
             </form>
           </div>
         </div>
 
+        <!-- Kurzus adatai -->
         <div class="card-box">
-          <div class="card-box-head"><h5><i class="fas fa-info-circle me-2 text-primary"></i>Kurzus adatai</h5></div>
+          <div class="card-box-head">
+            <h5><i class="fas fa-info-circle me-2 text-primary"></i>Kurzus adatai</h5>
+          </div>
           <div class="card-box-body">
-            <div class="info-row"><span class="lbl">Típus</span>
+            <div class="info-row">
+              <span class="lbl">Típus</span>
               <span th:if="${course.isPublic}" class="badge" style="background:#EEF4FF;color:#3B6FE8;">Publikus</span>
               <span th:unless="${course.isPublic}" class="badge" style="background:#F1F5F9;color:#64748B;">Privát</span>
             </div>
-            <div class="info-row"><span class="lbl">Létrehozva</span><span style="font-weight:600;" th:text="${#temporals.format(course.createdAt,'yyyy.MM.dd.')}">dátum</span></div>
-            <div class="info-row"><span class="lbl">Beiratkozott</span><span style="font-weight:600;" th:text="${course.enrolledUsers.size()} + ' fő'">0</span></div>
-            <div class="mt-3 d-flex flex-column gap-2">
-              <a th:href="@{/courses/{id}/quizzes/create(id=${course.id})}" class="btn btn-primary btn-sm w-100"><i class="fas fa-question-circle me-2"></i>Új kérdéssor</a>
-              <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-eye me-2"></i>Kurzus megtekintése</a>
+            <div class="info-row">
+              <span class="lbl">Létrehozva</span>
+              <span style="font-weight:600;"
+                    th:text="${#temporals.format(course.createdAt,'yyyy.MM.dd.')}">dátum</span>
+            </div>
+            <div class="info-row">
+              <span class="lbl">Beiratkozott</span>
+              <span style="font-weight:600;"
+                    th:text="${course.enrolledUsers.size()} + ' fő'">0</span>
+            </div>
+            <div class="info-row">
+              <span class="lbl">Prezentációk</span>
+              <span style="font-weight:600;"
+                    th:text="${presentations != null ? presentations.size() : 0} + ' db'">0</span>
+            </div>
+            <div class="info-row">
+              <span class="lbl">Kérdéssorok</span>
+              <span style="font-weight:600;"
+                    th:text="${quizzes != null ? quizzes.size() : 0} + ' db'">0</span>
+            </div>
+            <div class="mt-3">
+              <a th:href="@{/courses/{id}/quizzes/create(id=${course.id})}"
+                 class="btn btn-primary btn-sm w-100">
+                <i class="fas fa-question-circle me-2"></i>Új kérdéssor létrehozása
+              </a>
             </div>
           </div>
+        </div>
+
+        <!-- Veszélyzóna -->
+        <div class="card-box" style="border-color:#FECDD3;">
+          <div class="card-box-head" style="background:#FFF1F2;">
+            <h5 style="color:#9F1239;">
+              <i class="fas fa-exclamation-triangle me-2"></i>Veszélyzóna
+            </h5>
+          </div>
+          <div class="card-box-body">
+            <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+              A kurzus törlése <strong>végleges és visszafordíthatatlan</strong> művelet.
+              Minden beiratkozás, prezentáció és kérdéssor törlődik.
+            </p>
+            <button class="btn btn-sm btn-outline-danger w-100"
+                    data-bs-toggle="modal" data-bs-target="#deleteCourseModal">
+              <i class="fas fa-trash-alt me-2"></i>Kurzus törlése
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Kurzus törlése modal ── -->
+  <div class="modal fade" id="deleteCourseModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content"
+           style="border-radius:16px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15);">
+        <div class="modal-header"
+             style="background:#FFF1F2;border-radius:16px 16px 0 0;border-bottom:1px solid #FECDD3;">
+          <h5 class="modal-title" style="color:#9F1239;font-weight:700;">
+            <i class="fas fa-exclamation-triangle me-2"></i>Kurzus törlése
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="padding:28px;">
+          <p style="color:#374151;margin-bottom:10px;">
+            Biztosan törlöd a
+            <strong th:text="${course.title}">kurzus</strong> nevű kurzust?
+          </p>
+          <ul style="color:#6B7280;font-size:13px;padding-left:18px;margin-bottom:0;">
+            <li>Minden beiratkozott diák elveszíti a hozzáférést</li>
+            <li>Az összes feltöltött prezentáció törlődik</li>
+            <li>Az összes kérdéssor és kitöltési eredmény törlődik</li>
+            <li>A művelet <strong>nem vonható vissza</strong></li>
+          </ul>
+        </div>
+        <div class="modal-footer"
+             style="border-top:1px solid #F3F4F6;padding:16px 24px;">
+          <button type="button" class="btn btn-sm btn-outline-secondary"
+                  data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Mégse
+          </button>
+          <form th:action="@{/courses/{id}/delete(id=${course.id})}"
+                method="post" style="margin:0;">
+            <button type="submit" class="btn btn-sm btn-danger">
+              <i class="fas fa-trash-alt me-2"></i>Igen, törlöm
+            </button>
+          </form>
         </div>
       </div>
     </div>
   </div>
+
   <footer class="site-footer">
     <div class="row g-3">
       <div class="col-md-4"><h5><i class="fas fa-graduation-cap me-2" style="color:#3B6FE8;"></i>ME-Learning</h5><p>Modern online tanulási platform.</p></div>

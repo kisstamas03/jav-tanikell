@@ -64,8 +64,11 @@ public class CourseController {
 
         if (userOpt.isPresent()) {
             User currentUser = userOpt.get();
-            if (currentUser.getRole() == Role.INSTRUCTOR || isAdmin(currentUser)) {
+            if (isAdmin(currentUser)) {
                 courses = courseService.getAllCourses();
+            } else if (currentUser.getRole() == Role.INSTRUCTOR) {
+                // Oktató csak a saját kurzusait látja
+                courses = courseService.getCoursesByInstructor(currentUser);
             } else {
                 List<Course> publicCourses  = courseService.getPublicCourses();
                 List<Course> enrolledCourses = courseService.getEnrolledCourses(currentUser);
@@ -83,7 +86,7 @@ public class CourseController {
     }
 
     // -----------------------------------------------------------------------
-    // Kurzus megtekintése  ← ITT VOLT A HIBA: quizzes nem lett átadva
+    // Kurzus megtekintése
     // -----------------------------------------------------------------------
 
     @GetMapping("/{id}")
@@ -93,6 +96,15 @@ public class CourseController {
 
         Course courseObj = courseOpt.get();
         Optional<User> userOpt = getCurrentUser(auth);
+
+        // Oktató a saját kurzusára kattintva → manage oldal
+        if (userOpt.isPresent()) {
+            User currentUser = userOpt.get();
+            if (currentUser.getRole() == Role.INSTRUCTOR
+                    && courseObj.getInstructor().getId().equals(currentUser.getId())) {
+                return "redirect:/courses/" + id + "/manage";
+            }
+        }
 
         // Privát kurzus ellenőrzés
         if (!courseObj.getIsPublic()) {
@@ -105,8 +117,6 @@ public class CourseController {
 
         model.addAttribute("course", courseObj);
         model.addAttribute("presentations", presentationService.getPresentationsByCourse(courseObj));
-
-        // ← JAVÍTÁS: quizzes átadása a nézetnek
         model.addAttribute("quizzes", quizService.getQuizzesByCourse(courseObj));
 
         userOpt.ifPresent(user -> {
@@ -183,7 +193,33 @@ public class CourseController {
     }
 
     // -----------------------------------------------------------------------
-    // Prezentáció hozzáadása meglévő kurzushoz (manage oldalról)
+    // Kurzus törlése (oktató vagy admin)
+    // -----------------------------------------------------------------------
+
+    @PostMapping("/{id}/delete")
+    public String deleteCourse(@PathVariable Long id,
+                               Authentication auth,
+                               RedirectAttributes redirectAttributes) {
+        Optional<Course> courseOpt = courseService.getCourseById(id);
+        Optional<User> userOpt = getCurrentUser(auth);
+
+        if (courseOpt.isEmpty() || userOpt.isEmpty()) return "redirect:/courses";
+
+        Course course = courseOpt.get();
+        User user = userOpt.get();
+
+        if (!isOwnerOrAdmin(course, user)) {
+            redirectAttributes.addFlashAttribute("error", "Nincs jogosultságod ehhez a művelethez!");
+            return "redirect:/courses/" + id + "/manage";
+        }
+
+        courseService.deleteCourse(id);
+        redirectAttributes.addFlashAttribute("success", "Kurzus sikeresen törölve!");
+        return "redirect:/courses";
+    }
+
+    // -----------------------------------------------------------------------
+    // Prezentáció hozzáadása meglévő kurzushoz
     // -----------------------------------------------------------------------
 
     @PostMapping("/{id}/add-presentations")
@@ -222,6 +258,34 @@ public class CourseController {
             redirectAttributes.addFlashAttribute("error", "Hiba a feltöltés során: " + e.getMessage());
         }
 
+        return "redirect:/courses/" + id + "/manage";
+    }
+
+    // -----------------------------------------------------------------------
+    // Prezentáció törlése
+    // -----------------------------------------------------------------------
+
+    @PostMapping("/{id}/delete-presentation")
+    public String deletePresentation(@PathVariable Long id,
+                                     @RequestParam Long presentationId,
+                                     Authentication auth,
+                                     RedirectAttributes redirectAttributes) {
+
+        Optional<Course> courseOpt = courseService.getCourseById(id);
+        Optional<User> userOpt = getCurrentUser(auth);
+
+        if (courseOpt.isEmpty() || userOpt.isEmpty()) return "redirect:/courses";
+
+        Course course = courseOpt.get();
+        User user = userOpt.get();
+
+        if (!isOwnerOrAdmin(course, user)) {
+            redirectAttributes.addFlashAttribute("error", "Nincs jogosultságod ehhez!");
+            return "redirect:/courses/" + id + "/manage";
+        }
+
+        presentationService.deletePresentation(presentationId);
+        redirectAttributes.addFlashAttribute("success", "Prezentáció sikeresen törölve!");
         return "redirect:/courses/" + id + "/manage";
     }
 
@@ -273,6 +337,7 @@ public class CourseController {
 
         model.addAttribute("course", courseObj);
         model.addAttribute("quizzes", quizService.getQuizzesByCourse(courseObj));
+        model.addAttribute("presentations", presentationService.getPresentationsByCourse(courseObj));
         model.addAttribute("allStudents", userService.getAllUsers().stream()
                 .filter(u -> u.getRole() == Role.STUDENT)
                 .toList());
