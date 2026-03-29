@@ -33,8 +33,21 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
+    /**
+     * Új felhasználó mentése — a jelszót BCrypt-tel enkódolja.
+     * Regisztrációnál és admin általi létrehozásnál használandó.
+     */
     public User saveUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
+    }
+
+    /**
+     * Meglévő felhasználó mentése jelszó újra-enkódolás NÉLKÜL.
+     * Szerepkör-módosításnál és jelszó-visszaállításnál használandó,
+     * ahol a jelszó már enkódolt formában van beállítva.
+     */
+    public User saveUserWithoutPasswordReEncode(User user) {
         return userRepository.save(user);
     }
 
@@ -50,16 +63,12 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-
     public boolean changePassword(User user, String currentPassword, String newPassword) {
-        // Ellenőrzés: helyes-e a jelenlegi jelszó?
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             return false;
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-
-        // Email értesítő küldése
         emailService.sendPasswordChangeEmail(user.getEmail(), user.getFirstName());
         return true;
     }

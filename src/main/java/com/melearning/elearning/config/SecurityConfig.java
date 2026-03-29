@@ -35,54 +35,56 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .userDetailsService(userDetailsService)
-                .authorizeHttpRequests(authz -> {
-                    // H2 konzol: csak dev módban és csak ADMIN-nek
-                    if (h2ConsoleEnabled) {
-                        authz.requestMatchers("/h2-console/**").hasRole("ADMIN");
-                    }
-                    authz
-                            .requestMatchers("/", "/login", "/register",
-                                    "/css/**", "/js/**", "/images/**").permitAll()
 
-                            // ── Oktató + Admin műveletek ──────────────────────────────
-                            .requestMatchers(
-                                    "/courses/create",
-                                    "/courses/*/manage",
-                                    "/courses/*/delete",
-                                    "/courses/*/delete-presentation",
-                                    "/courses/*/add-student",
-                                    "/courses/*/remove-student",
-                                    "/courses/*/add-presentations",
-                                    "/courses/*/quizzes/create",
-                                    "/courses/*/quizzes/*/delete",
-                                    "/courses/*/quizzes/*/thresholds",
-                                    "/courses/*/quizzes/*/results"
-                            ).hasAnyRole("INSTRUCTOR", "ADMIN")
+        http.userDetailsService(userDetailsService);
 
-                            // ── Admin-only műveletek ───────────────────────────────────
-                            .requestMatchers("/admin/**").hasRole("ADMIN")
+        http.authorizeHttpRequests(authz -> {
+            if (h2ConsoleEnabled) {
+                authz.requestMatchers("/h2-console/**").hasRole("ADMIN");
+            }
 
-                            // ── Minden más: be kell jelentkezni ───────────────────────
-                            .anyRequest().authenticated();
-                })
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/", true)
-                        .failureUrl("/login?error=true")
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/")
-                        .permitAll()
-                );
+            authz.requestMatchers(
+                    "/", "/login", "/register",
+                    "/css/**", "/js/**", "/images/**"
+            ).permitAll();
 
-        // H2 konzol CSRF és frame kivétel csak dev módban
+            authz.requestMatchers(
+                    "/courses/create",
+                    "/courses/*/manage",
+                    "/courses/*/delete",
+                    "/courses/*/delete-presentation",
+                    "/courses/*/add-student",
+                    "/courses/*/remove-student",
+                    "/courses/*/add-presentations",
+                    "/courses/*/quizzes/create",
+                    "/courses/*/quizzes/*/delete",
+                    "/courses/*/quizzes/*/thresholds",
+                    "/courses/*/quizzes/*/results"
+            ).hasAnyRole("INSTRUCTOR", "ADMIN");
+
+            authz.requestMatchers(
+                    "/admin/**",
+                    "/dashboard/admin/**"
+            ).hasRole("ADMIN");
+
+            authz.anyRequest().authenticated();
+        });
+
+        http.formLogin(form -> form
+                .loginPage("/login")
+                .defaultSuccessUrl("/", true)
+                .failureUrl("/login?error=true")
+                .permitAll()
+        );
+
+        http.logout(logout -> logout
+                .logoutSuccessUrl("/")
+                .permitAll()
+        );
+
         if (h2ConsoleEnabled) {
-            http
-                    .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
-                    .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
+            http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"));
+            http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
         }
 
         return http.build();
